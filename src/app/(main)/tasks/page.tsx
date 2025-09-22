@@ -84,7 +84,7 @@ export default function TasksPage() {
               />
               <div>
                 <p className="font-medium">{task.title}</p>
-                <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
+                <div className="text-sm text-muted-foreground flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-1">
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
                     <span>{task.assignedTo}</span>
@@ -106,7 +106,7 @@ export default function TasksPage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4 sm:gap-0">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight font-headline">Task Management</h1>
           <p className="text-muted-foreground">
