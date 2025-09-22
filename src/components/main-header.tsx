@@ -21,7 +21,7 @@ export function MainHeader() {
         <div className="flex gap-6 md:gap-10">
           <Link href="/dashboard" className="flex items-center space-x-2">
             <LayoutGrid className="h-6 w-6 text-primary" />
-            <span className="inline-block font-bold font-headline">FamCentral</span>
+            <span className="inline-block font-bold font-headline">fam360</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">

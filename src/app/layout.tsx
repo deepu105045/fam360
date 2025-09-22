@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'FamCentral',
+  title: 'fam360',
   description: 'Manage your family expenses, assets, tasks, and chat all in one place.',
 };
 

@@ -10,7 +10,7 @@ export default function LoginPage() {
         <div className="text-center">
           <LayoutGrid className="mx-auto h-12 w-12 text-primary" />
           <h1 className="mt-4 font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            FamCentral
+            fam360
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Your all-in-one family management hub.
