@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { SendHorizonal } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 type Message = {
   id: number;
@@ -110,15 +111,3 @@ export default function ChatPage() {
     </div>
   );
 }
-
-// Dummy Card components to satisfy compiler
-const Card = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cn("rounded-lg border bg-card text-card-foreground shadow-sm", className)} {...props} />
-);
-const CardContent = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cn("p-0", className)} {...props} />
-);
-const CardFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cn("flex items-center p-6 pt-0", className)} {...props} />
-);
-
