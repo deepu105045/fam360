@@ -12,7 +12,7 @@ const features = [
   {
     title: "Expense Management",
     description: "Track and categorize family spending.",
-    href: "/expenses",
+    href: "/expense-management",
     icon: <Wallet className="h-8 w-8 text-primary" />,
   },
   {
