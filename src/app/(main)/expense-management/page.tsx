@@ -10,14 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -27,44 +19,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Utensils, Bus, ShoppingBag, PlusCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type TransactionType = "expense" | "income" | "investment";
 
-type Transaction = {
+// This would typically be in a separate state management file or context
+const transactionsState: Transaction[] = [
+    { id: 1, type: "expense", date: new Date("2024-07-20"), category: "Groceries", amount: 150.75, paidBy: "You" },
+    { id: 2, type: "income", date: new Date("2024-07-19"), category: "Salary", amount: 2500.00, paidBy: "You", source: "Job" },
+    { id: 3, type: "expense", date: new Date("2024-07-18"), category: "Gas Bill", amount: 75.20, paidBy: "You" },
+    { id: 4, type: "investment", date: new Date("2024-07-17"), category: "Mutual Funds", amount: 500.00, paidBy: "You", investmentType: "Mutual Fund", institution: "Vanguard" },
+];
+
+export type Transaction = {
   id: number;
   type: TransactionType;
   date: Date;
   category: string;
   amount: number;
   paidBy: string;
-  // Expense specific
-  // ...
-  // Investment specific
   investmentType?: string;
   institution?: string;
   roi?: number;
-  // Income specific
   source?: string;
   frequency?: "one-time" | "recurring";
 };
 
-const initialTransactions: Transaction[] = [
-  { id: 1, type: "expense", date: new Date("2024-07-20"), category: "Groceries", amount: 150.75, paidBy: "You" },
-  { id: 2, type: "income", date: new Date("2024-07-19"), category: "Salary", amount: 2500.00, paidBy: "You", source: "Job" },
-  { id: 3, type: "expense", date: new Date("2024-07-18"), category: "Gas Bill", amount: 75.20, paidBy: "You" },
-  { id: 4, type: "investment", date: new Date("2024-07-17"), category: "Mutual Funds", amount: 500.00, paidBy: "You", investmentType: "Mutual Fund", institution: "Vanguard" },
-];
-
-
 export default function ExpenseManagementPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>(transactionsState);
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TransactionType>("expense");
 
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -97,13 +86,20 @@ export default function ExpenseManagementPage() {
   const handleAddTransaction = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!date || !category || !amount || !paidBy) {
-        // Basic validation
-        alert("Please fill all mandatory fields.");
+        toast({
+            title: "Error",
+            description: "Please fill all mandatory fields.",
+            variant: "destructive"
+        })
         return;
     }
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        alert("Amount must be a number greater than 0.");
+        toast({
+            title: "Error",
+            description: "Amount must be a number greater than 0.",
+            variant: "destructive"
+        })
         return;
     }
     
@@ -119,6 +115,14 @@ export default function ExpenseManagementPage() {
     };
 
     setTransactions([newTransaction, ...transactions]);
+    // Note: In a real app, you'd likely use a global state manager (like Context or Zustand)
+    // to update the transactions list so the /transactions page would reflect the new entry.
+    // For this prototype, we'll just show a success message.
+    
+    toast({
+        title: "Success!",
+        description: `Your ${activeTab} has been added.`,
+    })
     resetForm();
   };
 
@@ -220,40 +224,17 @@ export default function ExpenseManagementPage() {
       </>
     );
   };
-  
-  const getBadgeVariant = (type: TransactionType) => {
-    switch (type) {
-      case 'income':
-        return 'default';
-      case 'expense':
-        return 'destructive';
-      case 'investment':
-        return 'secondary';
-      default:
-        return 'outline';
-    }
-  };
-
-  const getBadgeClass = (type: TransactionType) => {
-    switch (type) {
-        case 'income': return 'bg-green-500/20 text-green-700 border-green-500/30';
-        case 'expense': return 'bg-red-500/20 text-red-700 border-red-500/30';
-        case 'investment': return 'bg-blue-500/20 text-blue-700 border-blue-500/30';
-        default: return '';
-    }
-  }
-
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
         <div className="space-y-2 mb-8">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Expense Management</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Add Transaction</h1>
             <p className="text-muted-foreground">
-            Track and manage your family's financial transactions.
+            Add a new expense, income, or investment to your records.
             </p>
         </div>
 
-        <Card className="mb-8">
+        <Card>
             <CardHeader>
                 <CardTitle>Add a New Transaction</CardTitle>
                 <CardDescription>Select the transaction type and fill in the details.</CardDescription>
@@ -274,44 +255,6 @@ export default function ExpenseManagementPage() {
                 </Tabs>
             </CardContent>
         </Card>
-
-        <Card>
-            <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Paid By</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {transactions.map((t) => (
-                    <TableRow key={t.id}>
-                    <TableCell>{format(t.date, "PPP")}</TableCell>
-                    <TableCell className="font-medium">{t.category}</TableCell>
-                    <TableCell>
-                        <Badge variant={getBadgeVariant(t.type)} className={cn("capitalize", getBadgeClass(t.type))}>
-                            {t.type}
-                        </Badge>
-                    </TableCell>
-                    <TableCell>{t.paidBy}</TableCell>
-                    <TableCell className={`text-right font-semibold ${t.type === 'income' ? 'text-green-600' : t.type === 'expense' ? 'text-red-600' : 'text-blue-600'}`}>
-                        {t.type === 'expense' && '- '}${t.type === 'income' && '+ '}${t.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
-                    </TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
-            </CardContent>
-        </Card>
     </div>
   );
 }
-
-    
