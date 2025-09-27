@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Wallet, Home, ClipboardList, MessagesSquare } from "lucide-react";
+import { Wallet, Home, ClipboardList, MessagesSquare, Users } from "lucide-react";
 
 const features = [
   {
@@ -34,6 +34,12 @@ const features = [
     href: "/chat",
     icon: <MessagesSquare className="h-8 w-8 text-primary" />,
   },
+  {
+    title: "Family Settings",
+    description: "Add and manage family members.",
+    href: "/family-settings",
+    icon: <Users className="h-8 w-8 text-primary" />,
+  },
 ];
 
 export default function DashboardPage() {
@@ -45,7 +51,7 @@ export default function DashboardPage() {
           Welcome back, Guest! Here&apos;s your family overview.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
           <Link href={feature.href} key={feature.title}>
             <Card className="h-full transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-xl">

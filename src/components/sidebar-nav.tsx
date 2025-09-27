@@ -10,7 +10,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSign, PieChart } from "lucide-react";
+import { Menu, LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSign, PieChart, Users } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -20,6 +20,7 @@ const navItems = [
   { href: "/assets", label: "Assets", icon: Home },
   { href: "/tasks", label: "Tasks", icon: ClipboardList },
   { href: "/chat", label: "Chat", icon: MessagesSquare },
+  { href: "/family-settings", label: "Family Settings", icon: Users },
 ];
 
 export function SidebarNav() {
