@@ -20,22 +20,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import type { Transaction, TransactionType } from "@/lib/types";
 
-type TransactionType = "expense" | "income" | "investment";
-
-type Transaction = {
-  id: number;
-  type: TransactionType;
-  date: Date;
-  category: string;
-  amount: number;
-  paidBy: string;
-  investmentType?: string;
-  institution?: string;
-  roi?: number;
-  source?: string;
-  frequency?: "one-time" | "recurring";
-};
 
 const initialTransactions: Transaction[] = [
   { id: 1, type: "expense", date: new Date("2024-07-20"), category: "Groceries", amount: 150.75, paidBy: "You" },

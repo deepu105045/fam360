@@ -10,11 +10,12 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSign } from "lucide-react";
+import { Menu, LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSign, PieChart } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/expense-management", label: "Add Transaction", icon: Wallet },
+  { href: "/expense-management", label: "Expense Summary", icon: PieChart },
+  { href: "/add-transaction", label: "Add Transaction", icon: Wallet },
   { href: "/transactions", label: "All Transactions", icon: DollarSign },
   { href: "/assets", label: "Assets", icon: Home },
   { href: "/tasks", label: "Tasks", icon: ClipboardList },

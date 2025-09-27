@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import {
   Card,
@@ -11,7 +12,7 @@ import { Wallet, Home, ClipboardList, MessagesSquare } from "lucide-react";
 const features = [
   {
     title: "Expense Management",
-    description: "Track and categorize family spending.",
+    description: "View spending summary and track transactions.",
     href: "/expense-management",
     icon: <Wallet className="h-8 w-8 text-primary" />,
   },
@@ -64,5 +65,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
