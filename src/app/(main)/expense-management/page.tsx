@@ -29,14 +29,6 @@ import { useToast } from "@/hooks/use-toast";
 
 type TransactionType = "expense" | "income" | "investment";
 
-// This would typically be in a separate state management file or context
-const transactionsState: Transaction[] = [
-    { id: 1, type: "expense", date: new Date("2024-07-20"), category: "Groceries", amount: 150.75, paidBy: "You" },
-    { id: 2, type: "income", date: new Date("2024-07-19"), category: "Salary", amount: 2500.00, paidBy: "You", source: "Job" },
-    { id: 3, type: "expense", date: new Date("2024-07-18"), category: "Gas Bill", amount: 75.20, paidBy: "You" },
-    { id: 4, type: "investment", date: new Date("2024-07-17"), category: "Mutual Funds", amount: 500.00, paidBy: "You", investmentType: "Mutual Fund", institution: "Vanguard" },
-];
-
 export type Transaction = {
   id: number;
   type: TransactionType;
@@ -52,7 +44,7 @@ export type Transaction = {
 };
 
 export default function ExpenseManagementPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(transactionsState);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TransactionType>("expense");
 
@@ -115,9 +107,6 @@ export default function ExpenseManagementPage() {
     };
 
     setTransactions([newTransaction, ...transactions]);
-    // Note: In a real app, you'd likely use a global state manager (like Context or Zustand)
-    // to update the transactions list so the /transactions page would reflect the new entry.
-    // For this prototype, we'll just show a success message.
     
     toast({
         title: "Success!",
@@ -130,7 +119,7 @@ export default function ExpenseManagementPage() {
     return (
       <>
         {/* Common Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="date">Date</Label>
                  <Popover>
@@ -174,7 +163,7 @@ export default function ExpenseManagementPage() {
         {activeTab === 'expense' && (
             <div className="space-y-2 pt-4">
                 <Label>Quick Categories</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={() => setCategory("Food")}><Utensils className="mr-2 h-4 w-4" />Food</Button>
                     <Button variant="outline" size="sm" onClick={() => setCategory("Transport")}><Bus className="mr-2 h-4 w-4" />Transport</Button>
                     <Button variant="outline" size="sm" onClick={() => setCategory("Shopping")}><ShoppingBag className="mr-2 h-4 w-4" />Shopping</Button>
@@ -184,7 +173,7 @@ export default function ExpenseManagementPage() {
         
         {/* Income Specific */}
         {activeTab === 'income' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                  <div className="space-y-2">
                     <Label htmlFor="source">Income Source</Label>
                     <Input id="source" value={source} onChange={(e) => setSource(e.target.value)} />
@@ -206,7 +195,7 @@ export default function ExpenseManagementPage() {
 
         {/* Investment Specific */}
         {activeTab === 'investment' && (
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <div className="space-y-2">
                     <Label htmlFor="investmentType">Investment Type</Label>
                     <Input id="investmentType" value={investmentType} onChange={(e) => setInvestmentType(e.target.value)} />
@@ -236,7 +225,7 @@ export default function ExpenseManagementPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Add a New Transaction</CardTitle>
+                <CardTitle>New Transaction</CardTitle>
                 <CardDescription>Select the transaction type and fill in the details.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -248,7 +237,7 @@ export default function ExpenseManagementPage() {
                     </TabsList>
                     <form onSubmit={handleAddTransaction} className="space-y-4 mt-6">
                         {renderFormFields()}
-                        <div className="flex justify-end">
+                        <div className="flex justify-end pt-4">
                             <Button type="submit"><PlusCircle className="mr-2 h-4 w-4"/> Add Transaction</Button>
                         </div>
                     </form>
