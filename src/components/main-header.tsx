@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { LogOut, Settings, User, PlusCircle, ChevronsUpDown, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useAuth } from "@/hooks/use-auth";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
 
 export function MainHeader() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [currentFamily, setCurrentFamily] = useState("Miller Family");
   const [isSwitching, setIsSwitching] = useState(false);
 
@@ -32,6 +38,11 @@ export function MainHeader() {
       setCurrentFamily(familyName);
       setIsSwitching(false);
     }, 1500);
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
   };
 
 
@@ -83,17 +94,17 @@ export function MainHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src="/avatars/01.png" alt="@guest" />
-                    <AvatarFallback>G</AvatarFallback>
+                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+                    <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Guest User</p>
+                    <p className="text-sm font-medium leading-none">{user?.displayName || 'User'}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      guest@example.com
+                      {user?.email || 'No email'}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -107,9 +118,9 @@ export function MainHeader() {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <Link href="/">Log out</Link>
+                  <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
