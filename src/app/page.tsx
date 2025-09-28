@@ -6,15 +6,46 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { GoogleIcon } from '@/components/icons';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading, signInWithGoogle } = useAuth();
+  const { toast } = useToast();
 
-  const handleGoogleLogin = () => {
-    // Simulate a successful login
-    console.log("Simulating Google Login...");
-    router.push('/dashboard');
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      if (error.code === 'auth/popup-blocked') {
+        toast({
+          title: "Login Error",
+          description: "Pop-up blocked. Please allow pop-ups for this site and try again.",
+          variant: "destructive",
+        });
+      } else {
+         toast({
+          title: "Login Error",
+          description: "Could not log in with Google. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
   };
+
+  if (loading || user) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
@@ -30,9 +61,9 @@ export default function LoginPage() {
           />
         </div>
         <div className="w-full space-y-4">
-          <Button onClick={handleGoogleLogin} variant="outline" className="w-full" size="lg">
+          <Button onClick={handleGoogleLogin} variant="outline" className="w-full" size="lg" disabled={loading}>
             <GoogleIcon className="mr-2 h-5 w-5" />
-            Login with Google
+            {loading ? 'Logging in...' : 'Login with Google'}
           </Button>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
