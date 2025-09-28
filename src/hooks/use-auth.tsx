@@ -6,10 +6,11 @@ import {
   onAuthStateChanged, 
   signOut as firebaseSignOut, 
   GoogleAuthProvider, 
-  signInWithPopup,
+  signInWithRedirect,
   User
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
@@ -27,15 +28,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-      // Store a simple flag to distinguish from initial load vs logged out state
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        const db = getFirestore();
+        const env = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+        const userRef = doc(db, `fam360/${env}/users`, user.uid);
+        
+        try {
+          await setDoc(userRef, {
+            uid: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+          }, { merge: true });
+        } catch (error) {
+          console.error("Error writing user to Firestore:", error);
+        }
+
+        setUser(user);
         localStorage.setItem('auth_user', 'true');
       } else {
+        setUser(null);
         localStorage.removeItem('auth_user');
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -45,8 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const provider = new GoogleAuthProvider();
     setLoading(true);
     try {
-      await signInWithPopup(auth, provider);
-      // onAuthStateChanged will handle setting the user
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error("Error signing in with Google:", error);
       setLoading(false);
@@ -56,7 +71,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await firebaseSignOut(auth);
-    localStorage.removeItem('auth_user');
     router.push('/');
   };
   
