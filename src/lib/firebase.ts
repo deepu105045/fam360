@@ -3,13 +3,15 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBNigP1oHgcc3CIO63KDMgaIC70nMdw8pc",
-  authDomain: "studio-5926457398-92ea0.firebaseapp.com",
-  projectId: "studio-5926457398-92ea0",
-  storageBucket: "studio-5926457398-92ea0.firebasestorage.app",
-  messagingSenderId: "430792785599",
-  appId: "1:430792785599:web:d901d11c64510e56fc900a"
+  apiKey: "AIzaSyBELonaNwysF-H-MPtadqHJeEzNKWAqhvs",
+  authDomain: "fam360-official.firebaseapp.com",
+  projectId: "fam360-official",
+  storageBucket: "fam360-official.firebasestorage.app",
+  messagingSenderId: "88183606781",
+  appId: "1:88183606781:web:5086e666336f8c51cddd94",
+  measurementId: "G-QSVX0R2NQH"
 };
 
 // Initialize Firebase
