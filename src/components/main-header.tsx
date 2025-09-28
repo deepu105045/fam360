@@ -19,13 +19,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { useAuth } from "@/hooks/use-auth";
-import { auth } from "@/lib/firebase";
-import { signOut } from "firebase/auth";
 
 export function MainHeader() {
   const router = useRouter();
-  const { user } = useAuth();
   const [currentFamily, setCurrentFamily] = useState("Miller Family");
   const [isSwitching, setIsSwitching] = useState(false);
 
@@ -39,12 +35,6 @@ export function MainHeader() {
       setIsSwitching(false);
     }, 1500);
   };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/');
-  };
-
 
   return (
     <>
@@ -94,17 +84,17 @@ export function MainHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
-                    <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                    <AvatarImage src='' alt='Guest' />
+                    <AvatarFallback>G</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.displayName || 'User'}</p>
+                    <p className="text-sm font-medium leading-none">Guest</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email || 'No email'}
+                      guest@example.com
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -118,7 +108,7 @@ export function MainHeader() {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={() => router.push('/')}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
