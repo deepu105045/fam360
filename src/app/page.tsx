@@ -19,13 +19,21 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during Google login:", error);
-      toast({
-        title: "Login Failed",
-        description: "Could not log in with Google. Please try again.",
-        variant: "destructive",
-      });
+      if (error.code === 'auth/popup-blocked') {
+        toast({
+            title: "Login Failed",
+            description: "Your browser blocked the login pop-up. Please allow pop-ups for this site and try again.",
+            variant: "destructive",
+        });
+      } else {
+        toast({
+            title: "Login Failed",
+            description: "Could not log in with Google. Please try again.",
+            variant: "destructive",
+        });
+      }
     }
   };
 
