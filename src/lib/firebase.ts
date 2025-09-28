@@ -4,11 +4,11 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  "projectId": "studio-5926457398-92ea0",
+  "projectId": "fam360",
   "appId": "1:430792785599:web:28f9d1fd492029eefc900a",
   "apiKey": "AIzaSyBNigP1oHgcc3CIO63KDMgaIC70nMdw8pc",
-  "authDomain": "studio-5926457398-92ea0.firebaseapp.com",
-  "storageBucket": "studio-5926457398-92ea0.appspot.com",
+  "authDomain": "fam360.firebaseapp.com",
+  "storageBucket": "fam360.appspot.com",
   "messagingSenderId": "430792785599",
   "measurementId": "G-7E5J1P3T5N"
 };
