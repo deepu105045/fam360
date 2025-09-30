@@ -9,7 +9,7 @@ import {
   signInWithRedirect,
   User
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, signInWithEmailAndPassword } from '@/lib/firebase';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
@@ -17,6 +17,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  guestSignIn: () => Promise<void>;
   signOut: () => void;
 }
 
@@ -69,12 +70,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const guestSignIn = async () => {
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, 'Guest@fam360.com', 'Fam360guest');
+    } catch (error) {
+      console.error("Error signing in as guest:", error);
+      setLoading(false);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     await firebaseSignOut(auth);
     router.push('/');
   };
   
-  const value = { user, loading, signInWithGoogle, signOut };
+  const value = { user, loading, signInWithGoogle, guestSignIn, signOut };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

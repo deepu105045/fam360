@@ -4,7 +4,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, Settings, User, PlusCircle, ChevronsUpDown, Loader2 } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { LogOut, Settings, User, PlusCircle, ChevronsUpDown, Loader2, ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,8 +23,16 @@ import { useAuth } from "@/hooks/use-auth";
 
 export function MainHeader() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [currentFamily, setCurrentFamily] = useState("Miller Family");
   const [isSwitching, setIsSwitching] = useState(false);
+
+  // Check if we should show the back button (not on dashboard)
+  const shouldShowBackButton = pathname !== "/dashboard";
+  
+  // Check if we should show the logo (only on dashboard)
+  const shouldShowLogo = pathname === "/dashboard";
 
   const handleFamilySwitch = (familyName: string) => {
     if (familyName === currentFamily) return;
@@ -36,20 +45,39 @@ export function MainHeader() {
     }, 1500);
   };
 
+  const handleBackClick = () => {
+    router.back();
+  };
+
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-card">
         <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
           <div className="flex gap-6 md:gap-10">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <Image
-                src="/fam_360_logo.png"
-                alt="fam360 logo"
-                width={150}
-                height={32}
-                className="h-8 w-auto"
-              />
-            </Link>
+            {/* Mobile Back Button */}
+            {shouldShowBackButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBackClick}
+                className="md:hidden"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="sr-only">Go back</span>
+              </Button>
+            )}
+            
+            {shouldShowLogo && (
+              <Link href="/dashboard" className="flex items-center space-x-2">
+                <Image
+                  src="/fam_360_logo.png"
+                  alt="fam360 logo"
+                  width={150}
+                  height={32}
+                  className="h-8 w-auto"
+                />
+              </Link>
+            )}
           </div>
           <div className="flex flex-1 items-center justify-end space-x-2">
             

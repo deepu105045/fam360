@@ -1,7 +1,6 @@
 
 "use client";
 
-import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithGoogle, guestSignIn } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,6 +39,20 @@ export default function LoginPage() {
           variant: "destructive",
         });
       }
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      await guestSignIn();
+      router.push('/dashboard');
+    } catch (error: any) {
+      console.error("Guest login error:", error);
+      toast({
+        title: "Login Error",
+        description: "Could not log in as guest. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -75,8 +88,8 @@ export default function LoginPage() {
               </span>
             </div>
           </div>
-          <Button asChild variant="secondary" className="w-full" size="lg">
-            <Link href="/dashboard">Guest</Link>
+          <Button onClick={handleGuestLogin} variant="secondary" className="w-full" size="lg" disabled={loading}>
+            {loading ? 'Logging in...' : 'Guest'}
           </Button>
         </div>
         <p className="px-8 text-center text-sm text-muted-foreground">

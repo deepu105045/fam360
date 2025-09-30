@@ -4,13 +4,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSign, PieChart, Users } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSign, PieChart, Users } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -46,21 +41,6 @@ export function SidebarNav() {
 
   return (
     <>
-      {/* Mobile Sidebar */}
-      <div className="md:hidden p-4">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Menu className="h-4 w-4" />
-              <span className="sr-only">Open navigation</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-60 p-0">
-            {renderNavLinks(true)}
-          </SheetContent>
-        </Sheet>
-      </div>
-
       {/* Desktop Sidebar */}
       <aside className="hidden md:block w-64 border-r bg-background">
         {renderNavLinks()}
