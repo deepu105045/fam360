@@ -6,7 +6,7 @@ import {
   onAuthStateChanged, 
   signOut as firebaseSignOut, 
   GoogleAuthProvider, 
-  signInWithRedirect,
+  signInWithPopup,
   User
 } from 'firebase/auth';
 import { auth, signInWithEmailAndPassword } from '@/lib/firebase';
@@ -30,7 +30,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", user ? "User signed in" : "User signed out");
       if (user) {
+        console.log("User details:", {
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL
+        });
+        
         const db = getFirestore();
         const env = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
         const userRef = doc(db, `fam360/${env}/users`, user.uid);
@@ -62,7 +70,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const provider = new GoogleAuthProvider();
     setLoading(true);
     try {
-      await signInWithRedirect(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      // User is automatically signed in, no need for additional redirect
+      return result;
     } catch (error) {
       console.error("Error signing in with Google:", error);
       setLoading(false);

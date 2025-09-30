@@ -22,14 +22,21 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      await signInWithGoogle();
-      router.push('/dashboard');
+      const result = await signInWithGoogle();
+      console.log("Google login successful:", result);
+      // The useEffect will handle the redirect when user state changes
     } catch (error: any) {
       console.error("Google login error:", error);
       if (error.code === 'auth/popup-blocked') {
         toast({
           title: "Login Error",
           description: "Pop-up blocked. Please allow pop-ups for this site and try again.",
+          variant: "destructive",
+        });
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: "Login Cancelled",
+          description: "Google login was cancelled. Please try again.",
           variant: "destructive",
         });
       } else {
