@@ -22,8 +22,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithGoogle();
-      console.log("Google login successful:", result);
+      await signInWithGoogle();
       // The useEffect will handle the redirect when user state changes
     } catch (error: any) {
       console.error("Google login error:", error);
@@ -52,7 +51,7 @@ export default function LoginPage() {
   const handleGuestLogin = async () => {
     try {
       await guestSignIn();
-      router.push('/dashboard');
+      // The useEffect will handle the redirect when user state changes
     } catch (error: any) {
       console.error("Guest login error:", error);
       toast({
