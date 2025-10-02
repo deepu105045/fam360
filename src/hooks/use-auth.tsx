@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const guestSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, 'Guest@fam360.com', 'Fam360guest');
+      await signInWithEmailAndPassword(auth, 'fam360Guest@fam360.com', 'fam360Guest');
     } catch (error) {
       console.error("Error signing in as guest:", error);
       setLoading(false);
