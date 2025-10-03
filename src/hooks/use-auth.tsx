@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               displayName: user.displayName,
               email: user.email,
               photoURL: user.photoURL,
-            });
+            }, { merge: true });
           }
 
           const hasFamily = await checkUserFamily(user);

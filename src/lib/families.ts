@@ -81,6 +81,12 @@ export async function createFamily(params: {
   memberEmails?: string[];
 }): Promise<string> {
   const now = Date.now();
+
+  // First, get the user document to ensure we have the latest data
+  const userRef = doc(db, FAM360, env, USERS, params.createdBy);
+  const userSnap = await getDoc(userRef);
+  const userData = (userSnap.exists() ? userSnap.data() : { uid: params.createdBy, families: [] }) as UserDoc;
+
   const batch = writeBatch(db);
 
   // 1. Create the family document
@@ -94,16 +100,22 @@ export async function createFamily(params: {
   };
   batch.set(familyRef, familyDoc);
 
-  // 2. Add creator as a member of the family
-  await addMemberToFamily(
-    batch,
-    familyRef.id,
-    params.createdBy,
-    "admin",
-    now
-  );
+  // 2. Add creator as a member to the family's sub-collection
+  const memberRef = doc(db, FAM360, env, FAMILIES, familyRef.id, "members", params.createdBy);
+  const memberDoc: FamilyMemberDoc = { userId: params.createdBy, role: "admin", joinedAt: now };
+  batch.set(memberRef, memberDoc);
 
-  // 3. Create invitations for each member email.
+  // 3. Update the user's document with the new family
+  const userFamiliesArr: UserFamilyMembership[] = Array.isArray(userData.families)
+    ? [...userData.families]
+    : [];
+
+  if (!userFamiliesArr.find((f) => f.familyId === familyRef.id)) {
+    userFamiliesArr.push({ familyId: familyRef.id, role: "admin" });
+  }
+  batch.set(userRef, { ...userData, families: userFamiliesArr, updatedAt: now }, { merge: true });
+
+  // 4. Create invitations for each member email.
   if (params.memberEmails && params.memberEmails.length > 0) {
     for (const email of params.memberEmails) {
       const normalizedEmail = email.toLowerCase().trim();
