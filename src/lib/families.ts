@@ -102,7 +102,7 @@ export async function createFamily(params: {
     now
   );
 
-  // 3. Create invitations for each member email
+  // 3. Create invitations for each member email.
   if (params.memberEmails && params.memberEmails.length > 0) {
     for (const email of params.memberEmails) {
       const normalizedEmail = email.toLowerCase().trim();
