@@ -71,6 +71,7 @@ export async function getFamiliesForUser(
       results.push({ id: snap.id, data: snap.data() as FamilyDoc });
     }
   }
+  console.log(`User ${userId} is part of families:`, results);
   return results;
 }
 
@@ -167,6 +168,7 @@ async function processPendingInvitations(
     const invitesSnap = await getDocs(q);
 
     if (!invitesSnap.empty) {
+      console.log(`User ${email} has pending invitations in family ${familyId}:`, invitesSnap.docs.map(d => d.data()));
       const batch = writeBatch(db);
       const now = Date.now();
 
