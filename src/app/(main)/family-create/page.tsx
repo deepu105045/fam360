@@ -7,7 +7,7 @@ import { createFamily } from "@/lib/families";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 
 export default function FamilyCreatePage() {
   const { user } = useAuth();
@@ -16,6 +16,7 @@ export default function FamilyCreatePage() {
   const [memberEmail, setMemberEmail] = useState("");
   const [memberEmails, setMemberEmails] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
   const handleAddMember = () => {
     if (memberEmail && !memberEmails.includes(memberEmail)) {
@@ -31,19 +32,20 @@ export default function FamilyCreatePage() {
   const handleCreate = async () => {
     if (!user || !familyName.trim()) return;
     setBusy(true);
+    setStatusMessage("Creating family...");
     try {
-      const familyId = await createFamily({
+      await createFamily({
         familyName: familyName.trim(),
         createdBy: user.uid,
         memberEmails: memberEmails,
       });
-      // The useFamily hook now handles family selection and local storage
-      router.push("/dashboard");
+      setStatusMessage("Family created! Redirecting to dashboard...");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
     } catch (error) {
       console.error("Failed to create family:", error);
-      // Handle error, maybe show a toast
-    }
-    finally {
+      setStatusMessage("Failed to create family. Please try again.");
       setBusy(false);
     }
   };
@@ -61,6 +63,7 @@ export default function FamilyCreatePage() {
               placeholder="Family name"
               value={familyName}
               onChange={(e) => setFamilyName(e.target.value)}
+              disabled={busy}
             />
           </div>
 
@@ -72,14 +75,15 @@ export default function FamilyCreatePage() {
                 value={memberEmail}
                 onChange={(e) => setMemberEmail(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
+                disabled={busy}
               />
-              <Button onClick={handleAddMember} variant="outline">Add</Button>
+              <Button onClick={handleAddMember} variant="outline" disabled={busy}>Add</Button>
             </div>
             <div className="space-y-2">
               {memberEmails.map((email) => (
                 <div key={email} className="flex items-center justify-between rounded-md bg-secondary px-3 py-2 text-sm">
                   <span>{email}</span>
-                  <Button variant="ghost" size="icon" onClick={() => handleRemoveMember(email)}>
+                  <Button variant="ghost" size="icon" onClick={() => handleRemoveMember(email)} disabled={busy}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -88,8 +92,10 @@ export default function FamilyCreatePage() {
           </div>
 
           <Button disabled={!familyName.trim() || busy} onClick={handleCreate} className="w-full">
-            {busy ? "Creating..." : "Create & Continue"}
+            {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {busy ? "Please wait" : "Create & Continue"}
           </Button>
+          {statusMessage && <p className="text-center text-sm text-muted-foreground mt-4">{statusMessage}</p>}
         </CardContent>
       </Card>
     </div>
