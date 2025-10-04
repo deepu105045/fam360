@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect, useContext, createContext, useCallback } from "react";
-import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth, guestSignIn } from "@/lib/firebase";
+import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
+import { auth, signInWithEmailAndPassword } from "@/lib/firebase";
 import { getUserDoc, getFamiliesForUser } from "@/lib/families";
 import { UserDoc, FamilyDoc } from "@/lib/types";
 
@@ -15,6 +15,7 @@ interface AuthContextType {
   error: any;
   signInWithGoogle: () => Promise<void>;
   guestSignIn: () => Promise<void>;
+  signOut: () => Promise<void>;
   actions: {
     refetch: () => void;
   };
@@ -82,6 +83,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const guestSignIn = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, 'fam360guest@fam360.com', 'fam360guest');
+    } catch (error) {
+      console.error("Guest sign-in error", error);
+      throw error;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('fam360_selected_family');
+    } catch (error) {
+      console.error("Sign out error", error);
+      throw error;
+    }
+  };
+
 
   return (
     <AuthContext.Provider
@@ -93,6 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         error,
         signInWithGoogle,
         guestSignIn,
+        signOut,
         actions: { refetch },
       }}
     >
