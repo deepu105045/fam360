@@ -4,13 +4,14 @@
 import { useState, useEffect, useContext, createContext, useCallback } from "react";
 import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
 import { auth, signInWithEmailAndPassword } from "@/lib/firebase";
-import { getUserDoc, getFamiliesForUser } from "@/lib/families";
-import { UserDoc, FamilyDoc } from "@/lib/types";
+import { createUser, getUser } from "@/lib/users";
+import { getMembershipsForUser } from "@/lib/families";
+import { User as UserType, Membership } from "@/lib/types";
 
 interface AuthContextType {
   user: User | null;
-  userDoc: UserDoc | null;
-  families: Array<{ id: string; data: FamilyDoc }>;
+  userDoc: UserType | null;
+  memberships: Membership[];
   loading: boolean;
   error: any;
   signInWithGoogle: () => Promise<void>;
@@ -25,27 +26,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
-  const [families, setFamilies] = useState<Array<{ id: string; data: FamilyDoc }>>([]);
+  const [userDoc, setUserDoc] = useState<UserType | null>(null);
+  const [memberships, setMemberships] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
   const fetchUserData = useCallback(async (uid: string) => {
     setLoading(true);
     try {
-      const userDocPromise = getUserDoc(uid);
-      const familiesPromise = getFamiliesForUser(uid);
-
-      const [userDoc, families] = await Promise.all([userDocPromise, familiesPromise]);
-
+      const userDoc = await getUser(uid);
       setUserDoc(userDoc);
-      setFamilies(families || []);
+      if (userDoc) {
+        const memberships = await getMembershipsForUser(uid);
+        setMemberships(memberships);
+      }
       setError(null);
     } catch (err) {
       console.error("Error fetching user data:", err);
       setError(err);
       setUserDoc(null);
-      setFamilies([]);
+      setMemberships([]);
     } finally {
       setLoading(false);
     }
@@ -54,12 +54,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        const existingUser = await getUser(user.uid);
+        if (!existingUser) {
+          await createUser(user.uid, {
+            displayName: user.displayName || "",
+            email: user.email || "",
+            photoURL: user.photoURL || "",
+          });
+        }
         setUser(user);
         await fetchUserData(user.uid);
       } else {
         setUser(null);
         setUserDoc(null);
-        setFamilies([]);
+        setMemberships([]);
         setLoading(false);
       }
     });
@@ -95,8 +103,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('fam360_selected_family');
     } catch (error) {
       console.error("Sign out error", error);
       throw error;
@@ -109,7 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         userDoc,
-        families,
+        memberships,
         loading,
         error,
         signInWithGoogle,

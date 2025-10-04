@@ -4,12 +4,12 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./use-auth";
-import { getFamiliesForUser, upsertUserDoc } from "@/lib/families";
-import { FamilyDoc } from "@/lib/types";
+import { getFamily } from "@/lib/families";
+import { Family } from "@/lib/types";
 
 interface FamilyContextType {
-  families: Array<{ id: string; data: FamilyDoc }>;
-  currentFamily: { id: string; data: FamilyDoc } | null;
+  families: Array<{ id: string; data: Family }>;
+  currentFamily: { id: string; data: Family } | null;
   isLoading: boolean;
   switchFamily: (familyId: string) => void;
   refreshFamilies: () => void;
@@ -18,54 +18,56 @@ interface FamilyContextType {
 const FamilyContext = createContext<FamilyContextType | null>(null);
 
 export const FamilyProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, memberships, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [families, setFamilies] = useState<Array<{ id: string; data: FamilyDoc }>>([]);
-  const [currentFamily, setCurrentFamily] = useState<{ id: string; data: FamilyDoc } | null>(null);
+  const [families, setFamilies] = useState<Array<{ id: string; data: Family }>>([]);
+  const [currentFamily, setCurrentFamily] = useState<{ id: string; data: Family } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchFamilies = useCallback(async () => {
-    if (!user) return;
+    if (!user || memberships.length === 0) {
+        setIsLoading(false);
+        if(!authLoading && !user) router.push("/");
+        else if (!authLoading) router.push("/family/create");
+        return;
+    }
     setIsLoading(true);
     try {
-      // Process any pending invitations for the user
-      await upsertUserDoc(user.uid, { email: user.email });
+      const familyPromises = memberships.map(async (membership) => {
+        const familyData = await getFamily(membership.familyId);
+        return familyData ? { id: membership.familyId, data: familyData } : null;
+      });
 
-      const userFamilies = await getFamiliesForUser(user.uid);
+      const userFamilies = (await Promise.all(familyPromises)).filter(f => f !== null) as Array<{ id: string; data: Family }>;
       setFamilies(userFamilies);
+
       if (userFamilies.length > 0) {
-        // Check local storage for last selected family
         const lastFamilyId = localStorage.getItem("currentFamilyId");
         const familyToSelect = userFamilies.find(f => f.id === lastFamilyId) || userFamilies[0];
         setCurrentFamily(familyToSelect);
         localStorage.setItem("currentFamilyId", familyToSelect.id);
-      } else {
-        // No families, redirect to create one
-        router.push("/family-create");
+      } else if (!authLoading) {
+        router.push("/family/create");
       }
     } catch (error) {
       console.error("Error fetching families:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [user, router]);
+  }, [user, memberships, router, authLoading]);
 
   useEffect(() => {
-    fetchFamilies();
-  }, [fetchFamilies]);
+    if (!authLoading) {
+        fetchFamilies();
+    }
+  }, [fetchFamilies, authLoading]);
 
   const switchFamily = (familyId: string) => {
     const family = families.find((f) => f.id === familyId);
     if (family) {
-      setIsLoading(true);
-      // Simulate a delay for fetching new family data
-      setTimeout(() => {
-        setCurrentFamily(family);
-        localStorage.setItem("currentFamilyId", family.id);
-        setIsLoading(false);
-        // Optionally, force a reload or redirect to dashboard to refresh data
-        router.push("/dashboard");
-      }, 1000);
+      setCurrentFamily(family);
+      localStorage.setItem("currentFamilyId", family.id);
+      router.push("/dashboard");
     }
   };
 

@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+   env: {
+    NEXT_PUBLIC_FIREBASE_ENV: process.env.NEXT_PUBLIC_FIREBASE_ENV,
+  }
 };
 
 export default nextConfig;

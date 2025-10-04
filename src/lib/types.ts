@@ -1,4 +1,26 @@
 
+export type User = {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL: string;
+  createdAt: number;
+  lastLogin: number;
+};
+
+export type Family = {
+  familyName: string;
+  createdBy: string;
+  createdAt: number;
+};
+
+export type Membership = {
+  familyId: string;
+  userId: string;
+  role: "admin" | "member";
+  joinedAt: number;
+};
+
 export type TransactionType = "expense" | "income" | "investment";
 
 export type Transaction = {
@@ -13,38 +35,4 @@ export type Transaction = {
   roi?: number;
   source?: string;
   frequency?: "one-time" | "recurring";
-};
-
-export type UserFamilyMembership = {
-  familyId: string;
-  role: "admin" | "member";
-};
-
-export type UserDoc = {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  families: UserFamilyMembership[];
-  createdAt: number;
-  updatedAt: number;
-};
-
-export type FamilyDoc = {
-  familyName: string;
-  createdBy: string;
-  createdAt: number;
-  updatedAt: number;
-};
-
-export type FamilyMemberDoc = {
-  userId: string;
-  role: "admin" | "member";
-  joinedAt: number;
-};
-
-export type FamilyInvitationDoc = {
-  email: string;
-  role: "admin" | "member";
-  invitedAt: number;
 };

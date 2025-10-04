@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { useFamily } from '@/hooks/use-family';
 import {
   Card,
   CardContent,
@@ -48,19 +49,20 @@ const features = [
 ];
 
 export default function DashboardPage() {
-  const { user, families, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { families, isLoading: familyLoading } = useFamily();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user && families.length === 0) {
-      router.push('/family-create');
+    if (!authLoading && !familyLoading && user && families.length === 0) {
+      router.push('/family/create');
     }
-  }, [user, families, loading, router]);
+  }, [user, families, authLoading, familyLoading, router]);
 
-  if (loading || !user || families.length === 0) {
+  if (authLoading || familyLoading || !user) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
-  
+
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
       <div className="space-y-2 mb-8">
