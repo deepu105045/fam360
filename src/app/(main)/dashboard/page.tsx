@@ -1,5 +1,10 @@
 
+"use client";
+
+import { useEffect } from 'react';
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import {
   Card,
   CardContent,
@@ -43,12 +48,25 @@ const features = [
 ];
 
 export default function DashboardPage() {
+  const { user, families, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user && families.length === 0) {
+      router.push('/family-create');
+    }
+  }, [user, families, loading, router]);
+
+  if (loading || !user || families.length === 0) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
       <div className="space-y-2 mb-8">
         <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, Guest! Here&apos;s your family overview.
+          Welcome back! Here&apos;s your family overview.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

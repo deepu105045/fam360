@@ -1,51 +1,52 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
-import { createFamily } from "@/lib/families";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { X, Loader2 } from "lucide-react";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { createFamily } from '@/lib/families';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { X, Loader2 } from 'lucide-react';
 
 export default function FamilyCreatePage() {
-  const { user } = useAuth();
+  const { user, actions } = useAuth();
   const router = useRouter();
-  const [familyName, setFamilyName] = useState("");
-  const [memberEmail, setMemberEmail] = useState("");
+  const [familyName, setFamilyName] = useState('');
+  const [memberEmail, setMemberEmail] = useState('');
   const [memberEmails, setMemberEmails] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState('');
 
   const handleAddMember = () => {
     if (memberEmail && !memberEmails.includes(memberEmail)) {
       setMemberEmails([...memberEmails, memberEmail]);
-      setMemberEmail("");
+      setMemberEmail('');
     }
   };
 
   const handleRemoveMember = (emailToRemove: string) => {
-    setMemberEmails(memberEmails.filter(email => email !== emailToRemove));
+    setMemberEmails(memberEmails.filter((email) => email !== emailToRemove));
   };
 
   const handleCreate = async () => {
     if (!user || !familyName.trim()) return;
     setBusy(true);
-    setStatusMessage("Creating family...");
+    setStatusMessage('Creating family...');
     try {
       await createFamily({
         familyName: familyName.trim(),
         createdBy: user.uid,
         memberEmails: memberEmails,
       });
-      setStatusMessage("Family created! Redirecting to dashboard...");
+      actions.refetch();
+      setStatusMessage('Family created! Redirecting to dashboard...');
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push('/dashboard');
       }, 1500);
     } catch (error) {
-      console.error("Failed to create family:", error);
-      setStatusMessage("Failed to create family. Please try again.");
+      console.error('Failed to create family:', error);
+      setStatusMessage('Failed to create family. Please try again.');
       setBusy(false);
     }
   };
@@ -77,7 +78,9 @@ export default function FamilyCreatePage() {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
                 disabled={busy}
               />
-              <Button onClick={handleAddMember} variant="outline" disabled={busy}>Add</Button>
+              <Button onClick={handleAddMember} variant="outline" disabled={busy}>
+                Add
+              </Button>
             </div>
             <div className="space-y-2">
               {memberEmails.map((email) => (
@@ -93,7 +96,7 @@ export default function FamilyCreatePage() {
 
           <Button disabled={!familyName.trim() || busy} onClick={handleCreate} className="w-full">
             {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {busy ? "Please wait" : "Create & Continue"}
+            {busy ? 'Please wait' : 'Create & Continue'}
           </Button>
           {statusMessage && <p className="text-center text-sm text-muted-foreground mt-4">{statusMessage}</p>}
         </CardContent>

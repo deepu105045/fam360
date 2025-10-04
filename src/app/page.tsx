@@ -16,6 +16,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
+      // Check if user has a family and redirect accordingly
+      // This logic will be revisited once the family data is available in the auth context
       router.push('/dashboard');
     }
   }, [user, router]);
