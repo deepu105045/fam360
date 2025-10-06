@@ -93,7 +93,7 @@ export function MainHeader() {
                     ))}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/family-create")}>
+                  <DropdownMenuItem onClick={() => router.push("/family/create")}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     <span>Create New Family</span>
                   </DropdownMenuItem>

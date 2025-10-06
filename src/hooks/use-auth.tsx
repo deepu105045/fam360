@@ -5,13 +5,11 @@ import { useState, useEffect, useContext, createContext, useCallback } from "rea
 import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
 import { auth, signInWithEmailAndPassword } from "@/lib/firebase";
 import { createUser, getUser } from "@/lib/users";
-import { getMembershipsForUser } from "@/lib/families";
-import { User as UserType, Membership } from "@/lib/types";
+import { User as UserType } from "@/lib/types";
 
 interface AuthContextType {
   user: User | null;
   userDoc: UserType | null;
-  memberships: Membership[];
   loading: boolean;
   error: any;
   signInWithGoogle: () => Promise<void>;
@@ -27,7 +25,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userDoc, setUserDoc] = useState<UserType | null>(null);
-  const [memberships, setMemberships] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
@@ -36,16 +33,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const userDoc = await getUser(uid);
       setUserDoc(userDoc);
-      if (userDoc) {
-        const memberships = await getMembershipsForUser(uid);
-        setMemberships(memberships);
-      }
       setError(null);
     } catch (err) {
       console.error("Error fetching user data:", err);
       setError(err);
       setUserDoc(null);
-      setMemberships([]);
     } finally {
       setLoading(false);
     }
@@ -67,7 +59,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setUser(null);
         setUserDoc(null);
-        setMemberships([]);
         setLoading(false);
       }
     });
@@ -115,7 +106,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         userDoc,
-        memberships,
         loading,
         error,
         signInWithGoogle,

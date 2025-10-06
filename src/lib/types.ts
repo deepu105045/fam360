@@ -12,13 +12,7 @@ export type Family = {
   familyName: string;
   createdBy: string;
   createdAt: number;
-};
-
-export type Membership = {
-  familyId: string;
-  userId: string;
-  role: "admin" | "member";
-  joinedAt: number;
+  memberEmails: string[];
 };
 
 export type TransactionType = "expense" | "income" | "investment";

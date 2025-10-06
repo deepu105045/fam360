@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,63 +21,103 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PlusCircle, User, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { getMembershipsForUser, getFamilyMembers, addFamilyMember } from "@/lib/families";
+import { getUser } from "@/lib/users";
+import { Membership, User } from "@/lib/types";
 
-type Member = {
-  id: number;
-  name: string;
-  avatar: string;
-};
-
-const initialMembers: Member[] = [
-  { id: 1, name: "You", avatar: "/avatars/01.png" },
-  { id: 2, name: "Mom", avatar: "/avatars/02.png" },
-  { id: 3, name: "Dad", avatar: "/avatars/03.png" },
-];
+type Member = Membership & { user: User | null };
 
 export default function FamilySettingsPage() {
-  const [members, setMembers] = useState<Member[]>(initialMembers);
+  const { user } = useAuth();
+  const [members, setMembers] = useState<Member[]>([]);
+  const [familyId, setFamilyId] = useState<string | null>(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
-  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberEmail, setNewMemberEmail] = useState("");
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const { toast } = useToast();
 
+  const currentUserRole = members.find(m => m.userId === user?.uid)?.role;
+  const isCurrentUserAdmin = currentUserRole === 'admin';
 
-  const handleAddMember = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!newMemberName.trim()) return;
+  useEffect(() => {
+    if (!user) return;
 
-    const newMember: Member = {
-      id: Math.max(...members.map(m => m.id), 0) + 1,
-      name: newMemberName,
-      avatar: `/avatars/0${(members.length % 5) + 1}.png`, // Cycle through avatars
+    const fetchFamilyData = async () => {
+      try {
+        const memberships = await getMembershipsForUser(user.uid);
+        if (memberships.length > 0) {
+          const currentFamilyId = memberships[0].familyId;
+          setFamilyId(currentFamilyId);
+          const memberData = await getFamilyMembers(currentFamilyId);
+          const membersWithUserData = await Promise.all(
+            memberData.map(async (member) => {
+              const userData = await getUser(member.userId);
+              return { ...member, user: userData };
+            })
+          );
+          setMembers(membersWithUserData);
+        }
+      } catch (error) {
+        console.error("Error fetching family data:", error);
+        toast({ title: "Error", description: "Could not load family members.", variant: "destructive" });
+      }
     };
-    setMembers([...members, newMember]);
-    setNewMemberName("");
-    setAddDialogOpen(false);
-    toast({ title: "Success", description: "Family member added." });
+
+    fetchFamilyData();
+  }, [user, toast]);
+
+  const handleAddMember = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isCurrentUserAdmin) {
+      toast({ title: "Error", description: "Only admins can add members.", variant: "destructive" });
+      return;
+    }
+    if (!newMemberEmail.trim() || !familyId) return;
+
+    try {
+      await addFamilyMember(familyId, newMemberEmail);
+      const memberData = await getFamilyMembers(familyId);
+      const membersWithUserData = await Promise.all(
+        memberData.map(async (member) => {
+          const userData = await getUser(member.userId);
+          return { ...member, user: userData };
+        })
+      );
+      setMembers(membersWithUserData);
+      setNewMemberEmail("");
+      setAddDialogOpen(false);
+      toast({ title: "Success", description: "Family member added." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
   const handleEditMember = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!editingMember || !editingMember.name.trim()) return;
-
-    setMembers(members.map(m => m.id === editingMember.id ? editingMember : m));
-    setEditDialogOpen(false);
-    setEditingMember(null);
+    if (!isCurrentUserAdmin) {
+      toast({ title: "Error", description: "Only admins can edit members.", variant: "destructive" });
+      return;
+    }
+    if (!editingMember) return;
     toast({ title: "Success", description: "Family member updated." });
+    setEditDialogOpen(false);
   };
   
-  const handleDeleteMember = (memberId: number) => {
-    // Prevent deleting the main user
-    if (memberId === 1) {
+  const handleDeleteMember = (memberId: string) => {
+    if (!isCurrentUserAdmin) {
+      toast({ title: "Error", description: "Only admins can remove members.", variant: "destructive" });
+      return;
+    }
+    if (memberId === user?.uid) {
         toast({ title: "Error", description: "You cannot remove yourself from the family.", variant: "destructive" });
         return;
     }
-    setMembers(members.filter(m => m.id !== memberId));
+    setMembers(members.filter(m => m.userId !== memberId));
     toast({ title: "Success", description: "Family member removed." });
   }
 
@@ -95,27 +135,29 @@ export default function FamilySettingsPage() {
             Manage your family members.
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Family Member</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddMember} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Member Name</Label>
-                <Input id="name" name="name" value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} required />
-              </div>
-              <DialogFooter>
-                <Button type="submit">Add Member</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        {isCurrentUserAdmin && (
+          <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Member
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Family Member</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddMember} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Member Email</Label>
+                  <Input id="email" name="email" type="email" value={newMemberEmail} onChange={(e) => setNewMemberEmail(e.target.value)} required />
+                </div>
+                <DialogFooter>
+                  <Button type="submit">Add Member</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Card>
@@ -126,24 +168,29 @@ export default function FamilySettingsPage() {
         <CardContent>
           <div className="space-y-4">
             {members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+              <div key={member.userId} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
                 <div className="flex items-center gap-4">
                   <Avatar>
-                    <AvatarImage src={member.avatar} />
-                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={member.user?.photoURL} />
+                    <AvatarFallback>{member.user?.displayName?.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <p className="font-medium">{member.name}</p>
+                  <div>
+                    <p className="font-medium">{member.user?.displayName}</p>
+                    <p className="text-sm text-muted-foreground">{member.user?.email}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => openEditDialog(member)}>
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                   <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteMember(member.id)}>
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
-                </div>
+                {isCurrentUserAdmin && (
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => openEditDialog(member)}>
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteMember(member.userId)}>
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -162,10 +209,13 @@ export default function FamilySettingsPage() {
                 <Input 
                     id="edit-name" 
                     name="edit-name" 
-                    value={editingMember?.name || ''} 
-                    onChange={(e) => setEditingMember(prev => prev ? { ...prev, name: e.target.value } : null)} 
-                    required 
+                    value={editingMember?.user?.displayName || ''} 
+                    readOnly
                 />
+              </div>
+               <div className="space-y-2">
+                <Label>Role</Label>
+                 <p className="text-sm text-muted-foreground p-2">{editingMember?.role}</p>
               </div>
               <DialogFooter>
                 <DialogClose asChild>

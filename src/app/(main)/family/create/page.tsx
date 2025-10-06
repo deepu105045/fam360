@@ -1,72 +1,111 @@
+'use client';
 
-"use client";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { useFamily } from '@/hooks/use-family';
+import { createFamily } from '@/lib/families';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { X, Loader2 } from 'lucide-react';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
-import { createFamily } from "@/lib/families";
-
-export default function CreateFamilyPage() {
-  const { user } = useAuth();
+export default function FamilyCreatePage() {
+  const { user, userDoc } = useAuth();
+  const { refreshFamilies } = useFamily();
   const router = useRouter();
-  const [familyName, setFamilyName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [familyName, setFamilyName] = useState('');
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberEmails, setMemberEmails] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
-  const handleCreateFamily = async () => {
-    if (!user) {
-      setError("You must be logged in to create a family.");
-      return;
+  const handleAddMember = () => {
+    if (memberEmail && !memberEmails.includes(memberEmail)) {
+      setMemberEmails([...memberEmails, memberEmail]);
+      setMemberEmail('');
     }
+  };
 
-    if (!familyName.trim()) {
-      setError("Family name cannot be empty.");
-      return;
-    }
+  const handleRemoveMember = (emailToRemove: string) => {
+    setMemberEmails(memberEmails.filter((email) => email !== emailToRemove));
+  };
 
-    setLoading(true);
-    setError(null);
+  const handleCreate = async () => {
+    if (!user || !userDoc || !familyName.trim() || !userDoc.email) return;
+    setBusy(true);
+    setStatusMessage('Creating family...');
+
+    const finalMemberEmails = [...new Set([userDoc.email, ...memberEmails])];
+
+    const payload = {
+        familyName: familyName.trim(),
+        createdBy: user.uid,
+        memberEmails: finalMemberEmails,
+      };
 
     try {
-      const familyId = await createFamily(user.uid, familyName);
-      router.push(`/family/${familyId}`);
-    } catch (err) {
-      console.error("Error creating family:", err);
-      setError("Failed to create family. Please try again.");
-    } finally {
-      setLoading(false);
+      await createFamily(payload);
+      await refreshFamilies();
+      setStatusMessage('Family created! Redirecting to dashboard...');
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Failed to create family:', error);
+      setStatusMessage('Failed to create family. Please try again.');
+      setBusy(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center">Create a New Family</h2>
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="familyName" className="block text-sm font-medium text-gray-700">
-              Family Name
-            </label>
-            <input
-              id="familyName"
-              name="familyName"
-              type="text"
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+    <div className="container mx-auto p-8 max-w-xl">
+      <Card className="shadow-modern">
+        <CardHeader>
+          <CardTitle>Create a Family</CardTitle>
+          <CardDescription>Give your family a name and invite members.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Input
+              placeholder="Family name"
               value={familyName}
               onChange={(e) => setFamilyName(e.target.value)}
+              disabled={busy}
             />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <button
-            onClick={handleCreateFamily}
-            disabled={loading}
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {loading ? "Creating..." : "Create Family"}
-          </button>
-        </div>
-      </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Invite Members</h3>
+            <div className="flex space-x-2">
+              <Input
+                placeholder="Member's email"
+                value={memberEmail}
+                onChange={(e) => setMemberEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
+                disabled={busy}
+              />
+              <Button onClick={handleAddMember} variant="outline" disabled={busy}>
+                Add
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {memberEmails.map((email) => (
+                <div key={email} className="flex items-center justify-between rounded-md bg-secondary px-3 py-2 text-sm">
+                  <span>{email}</span>
+                  <Button variant="ghost" size="icon" onClick={() => handleRemoveMember(email)} disabled={busy}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Button disabled={!familyName.trim() || busy} onClick={handleCreate} className="w-full">
+            {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {busy ? 'Please wait' : 'Create & Continue'}
+          </Button>
+          {statusMessage && <p className="text-center text-sm text-muted-foreground mt-4">{statusMessage}</p>}
+        </CardContent>
+      </Card>
     </div>
   );
 }
