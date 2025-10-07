@@ -15,6 +15,12 @@ export type Family = {
   memberEmails: string[];
 };
 
+export type Membership = {
+  userId: string;
+  familyId: string;
+  role: 'admin' | 'member';
+};
+
 export type TransactionType = "expense" | "income" | "investment";
 
 export type Transaction = {

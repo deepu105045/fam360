@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading, signInWithGoogle, guestSignIn } = useAuth();
+  const { user, loading, signInWithGoogle, guestSignIn, guestSignIn2 } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -64,6 +64,20 @@ export default function LoginPage() {
     }
   };
 
+  const handleGuestLogin2 = async () => {
+    try {
+      await guestSignIn2();
+      // The useEffect will handle the redirect when user state changes
+    } catch (error: any) {
+      console.error("Guest login error:", error);
+      toast({
+        title: "Login Error",
+        description: "Could not log in as guest. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading || user) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
@@ -98,6 +112,9 @@ export default function LoginPage() {
           </div>
           <Button onClick={handleGuestLogin} variant="secondary" className="w-full" size="lg" disabled={loading}>
             {loading ? 'Logging in...' : 'Guest'}
+          </Button>
+          <Button onClick={handleGuestLogin2} variant="secondary" className="w-full" size="lg" disabled={loading}>
+            {loading ? 'Logging in...' : 'Guest 2'}
           </Button>
         </div>
         <p className="px-8 text-center text-sm text-muted-foreground">

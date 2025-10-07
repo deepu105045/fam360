@@ -25,9 +25,9 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { getMembershipsForUser, getFamilyMembers, addFamilyMember } from "@/lib/families";
+import { getFamiliesForUser, getFamilyMembers, addFamilyMember } from "@/lib/families";
 import { getUser } from "@/lib/users";
-import { Membership, User } from "@/lib/types";
+import { Membership, User }_from "@/lib/types";
 
 type Member = Membership & { user: User | null };
 
@@ -45,13 +45,13 @@ export default function FamilySettingsPage() {
   const isCurrentUserAdmin = currentUserRole === 'admin';
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.email) return;
 
     const fetchFamilyData = async () => {
       try {
-        const memberships = await getMembershipsForUser(user.uid);
-        if (memberships.length > 0) {
-          const currentFamilyId = memberships[0].familyId;
+        const families = await getFamiliesForUser(user.email!);
+        if (families.length > 0) {
+          const currentFamilyId = families[0].id;
           setFamilyId(currentFamilyId);
           const memberData = await getFamilyMembers(currentFamilyId);
           const membersWithUserData = await Promise.all(
@@ -69,7 +69,7 @@ export default function FamilySettingsPage() {
     };
 
     fetchFamilyData();
-  }, [user, toast]);
+  }, [user, toast, user?.email]);
 
   const handleAddMember = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

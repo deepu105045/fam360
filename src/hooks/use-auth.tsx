@@ -14,6 +14,7 @@ interface AuthContextType {
   error: any;
   signInWithGoogle: () => Promise<void>;
   guestSignIn: () => Promise<void>;
+  guestSignIn2: () => Promise<void>;
   signOut: () => Promise<void>;
   actions: {
     refetch: () => void;
@@ -91,6 +92,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const guestSignIn2 = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, 'fam360guest1@fam360.com', 'fam360guest1');
+    } catch (error) {
+      console.error("Guest sign-in error", error);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       await firebaseSignOut(auth);
@@ -110,6 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         error,
         signInWithGoogle,
         guestSignIn,
+        guestSignIn2,
         signOut,
         actions: { refetch },
       }}

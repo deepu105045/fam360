@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,13 +25,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Utensils, Bus, ShoppingBag, PlusCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Utensils, Bus, ShoppingBag, PlusCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Transaction, TransactionType } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
+import { useFamily } from "@/hooks/use-family";
+import { addTransaction } from "@/lib/transactions";
 
 export default function AddTransactionPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { currentFamily, isLoading } = useFamily();
   const [activeTab, setActiveTab] = useState<TransactionType>("expense");
 
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -48,12 +53,19 @@ export default function AddTransactionPage() {
   const [source, setSource] = useState("");
   const [frequency, setFrequency] = useState<"one-time" | "recurring">("one-time");
 
+  useEffect(() => {
+    if (user && currentFamily) {
+      console.log("Current Family Details:", currentFamily);
+      setPaidBy(user.email || "");
+    }
+  }, [user, currentFamily]);
+
 
   const resetForm = () => {
     setDate(new Date());
     setCategory("");
     setAmount("");
-    setPaidBy("");
+    setPaidBy(user?.email || "");
     setInvestmentType("");
     setInstitution("");
     setRoi("");
@@ -61,7 +73,7 @@ export default function AddTransactionPage() {
     setFrequency("one-time");
   };
 
-  const handleAddTransaction = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddTransaction = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!date || !amount || !paidBy) {
         toast({
@@ -80,6 +92,15 @@ export default function AddTransactionPage() {
         })
         return;
     }
+
+    if (!currentFamily) {
+        toast({
+            title: "Error",
+            description: "No family selected. Please select a family first.",
+            variant: "destructive"
+        })
+        return;
+    }
     
     const newTransaction: Omit<Transaction, 'id'> = {
       type: activeTab,
@@ -91,16 +112,21 @@ export default function AddTransactionPage() {
       ...(activeTab === 'income' && { source, frequency }),
     };
 
-    // In a real app, you would save this to a database.
-    console.log("New Transaction Added:", newTransaction);
-    
-    toast({
-        title: "Success!",
-        description: `Your ${activeTab} has been added.`,
-    })
-    
-    // Redirect back to the summary page
-    router.push('/expense-management');
+    try {
+      await addTransaction(currentFamily.id, newTransaction);
+      toast({
+          title: "Success!",
+          description: `Your ${activeTab} has been added.`,
+      })
+      router.push('/expense-management');
+    } catch (error) {
+      console.error("Error adding transaction: ", error);
+      toast({
+          title: "Error",
+          description: "Could not add transaction. Please try again.",
+          variant: "destructive"
+      })
+    }
   };
 
   const renderFormFields = () => {
@@ -143,7 +169,25 @@ export default function AddTransactionPage() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="paidBy">Paid By / Member</Label>
-                <Input id="paidBy" value={paidBy} onChange={(e) => setPaidBy(e.target.value)} required />
+                <Select onValueChange={setPaidBy} value={paidBy}>
+                    <SelectTrigger id="paidBy">
+                        <SelectValue placeholder="Select a member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {isLoading ? (
+                            <div className="flex items-center justify-center p-2">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <span>Loading...</span>
+                            </div>
+                        ) : (
+                            (currentFamily?.data?.memberEmails || []).map((email) => (
+                                <SelectItem key={email} value={email}>
+                                    {email}
+                                </SelectItem>
+                            ))
+                        )}
+                    </SelectContent>
+                </Select>
             </div>
         </div>
 
