@@ -75,6 +75,11 @@ export default function AddTransactionPage() {
 
   const handleAddTransaction = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log("Attempting to add transaction with the following details:");
+    console.log("Date:", date);
+    console.log("Amount:", amount);
+    console.log("Paid By:", paidBy);
+    console.log("Current Family:", currentFamily);
     if (!date || !amount || !paidBy) {
         toast({
             title: "Error",

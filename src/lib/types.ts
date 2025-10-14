@@ -25,6 +25,7 @@ export type TransactionType = "expense" | "income" | "investment";
 
 export type Transaction = {
   id: number;
+  familyId: string;
   type: TransactionType;
   date: Date;
   category: string;

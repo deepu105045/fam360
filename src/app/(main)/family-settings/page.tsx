@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { getFamiliesForUser, getFamilyMembers, addFamilyMember } from "@/lib/families";
 import { getUser } from "@/lib/users";
-import { Membership, User }_from "@/lib/types";
+import { Membership, User } from "@/lib/types";
 
 type Member = Membership & { user: User | null };
 
