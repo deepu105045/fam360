@@ -18,7 +18,7 @@ import { Wallet, Home, ClipboardList, MessagesSquare, Users } from "lucide-react
 const features = [
   {
     title: "Expense Management",
-    description: "View spending summary and track transactions.",
+    description: "View income, expenses, and savings.",
     href: "/expense-management",
     icon: <Wallet className="h-8 w-8 text-primary" />,
   },

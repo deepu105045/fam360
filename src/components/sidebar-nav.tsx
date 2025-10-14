@@ -9,7 +9,7 @@ import { LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSig
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/expense-management", label: "Expense Summary", icon: PieChart },
+  { href: "/expense-management", label: "Expense Management", icon: PieChart },
   { href: "/add-transaction", label: "Add Transaction", icon: Wallet },
   { href: "/transactions", label: "All Transactions", icon: DollarSign },
   { href: "/assets", label: "Assets", icon: Home },

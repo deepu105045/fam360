@@ -1,12 +1,11 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from 'next/link';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -14,17 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import type { Transaction } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
-
-// Using sample data. In a real app, this would come from an API.
-const initialTransactions: Transaction[] = [
-    { id: 1, type: "expense", date: new Date(), category: "Groceries", amount: 150.75, paidBy: "You" },
-    { id: 2, type: "income", date: new Date(), category: "Salary", amount: 2500.00, paidBy: "You", source: "Job" },
-    { id: 3, type: "expense", date: new Date("2024-06-15"), category: "Gas Bill", amount: 75.20, paidBy: "You" }, // Different month
-    { id: 4, type: "expense", date: new Date(), category: "Groceries", amount: 82.30, paidBy: "You" },
-    { id: 5, type: "expense", date: new Date(), category: "Dinner Out", amount: 65.00, paidBy: "Partner" },
-    { id: 6, type: "expense", date: new Date(), category: "Transport", amount: 45.50, paidBy: "You" },
-    { id: 7, type: "expense", date: new Date(), category: "Dinner Out", amount: 120.00, paidBy: "You" },
-];
+import { useFamily } from "@/hooks/use-family";
+import { collection, query, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 type CategorySpending = {
   category: string;
@@ -33,7 +24,35 @@ type CategorySpending = {
 };
 
 export default function ExpenseManagementPage() {
-  const [transactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { currentFamily } = useFamily();
+  const familyId = currentFamily?.id;
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!familyId) {
+        console.log("No familyId found.");
+        return;
+      }
+      console.log("Fetching transactions for familyId:", familyId);
+      const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+      const transactionsCollection = collection(db, `fam360/${env}/families`, familyId, "transactions");
+      const q = query(transactionsCollection);
+      const querySnapshot = await getDocs(q);
+      const fetchedTransactions = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          date: data.date.toDate(),
+        } as Transaction;
+      });
+      console.log("Fetched Transactions:", fetchedTransactions);
+      setTransactions(fetchedTransactions);
+    };
+
+    fetchTransactions();
+  }, [familyId]);
 
   const categorySpending = useMemo(() => {
     const currentMonth = new Date().getMonth();
@@ -69,35 +88,74 @@ export default function ExpenseManagementPage() {
   }, [transactions]);
 
   const totalCurrentMonthSpending = useMemo(() => {
-    return categorySpending.reduce((sum, item) => sum + item.total, 0);
-  }, [categorySpending]);
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
 
-  const getCategoryColor = (percentage: number) => {
-    if (percentage > 50) return "bg-red-500";
-    if (percentage > 25) return "bg-orange-500";
-    return "bg-green-500";
-  };
-  
+    return transactions
+        .filter(t => t.type === 'expense')
+        .filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+}, [transactions]);
+
+  const totalCurrentMonthIncome = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    return transactions
+        .filter(t => t.type === 'income')
+        .filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+  }, [transactions]);
+
+  const totalCurrentMonthSavings = totalCurrentMonthIncome - totalCurrentMonthSpending;
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8 relative min-h-[calc(100vh-8rem)]">
         <div className="space-y-2 mb-8">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Expense Summary</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">Expense Management</h1>
             <p className="text-muted-foreground">
-                Your spending for the current month, grouped by category.
+                Your income, expenses, and savings for the current month.
             </p>
         </div>
 
-        <Card className="mb-8">
-            <CardHeader>
-                <CardTitle>Total Monthly Spending</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-4xl font-bold tracking-tight text-primary">
-                ${totalCurrentMonthSpending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-            </CardContent>
-        </Card>
+        <div className="grid gap-4 md:grid-cols-3 md:gap-8 mb-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Total Monthly Income</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-4xl font-bold tracking-tight text-primary">
+                    ${totalCurrentMonthIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Total Monthly Spending</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-4xl font-bold tracking-tight text-primary">
+                    ${totalCurrentMonthSpending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Total Monthly Savings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-4xl font-bold tracking-tight text-primary">
+                    ${totalCurrentMonthSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                </CardContent>
+            </Card>
+        </div>
 
         <div className="space-y-6">
             <h2 className="text-2xl font-semibold tracking-tight font-headline">Category Breakdown</h2>
