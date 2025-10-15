@@ -1,3 +1,4 @@
+
 "use client";
 
 import { MainHeader } from "@/components/main-header";
@@ -32,10 +33,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
     return <>{children}</>;
   }
 
+  const showHeader = !pathname.startsWith('/expense-management');
+
   return (
     <FamilyProvider>
       <div className="flex min-h-screen flex-col">
-        <MainHeader />
+        {showHeader && <MainHeader />}
         <div className="flex flex-1">
           <SidebarNav />
           <main className="flex-1">{children}</main>

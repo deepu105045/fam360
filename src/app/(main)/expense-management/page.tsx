@@ -3,6 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -10,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ArrowDown, Scale, History, X, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Transaction } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
 import { useFamily } from "@/hooks/use-family";
@@ -25,8 +26,27 @@ type CategorySpending = {
 
 export default function ExpenseManagementPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const { currentFamily } = useFamily();
   const familyId = currentFamily?.id;
+  const router = useRouter();
+
+  const handlePrevMonth = () => {
+    setSelectedDate(prevDate => {
+      const newDate = new Date(prevDate);
+      newDate.setMonth(newDate.getMonth() - 1);
+      return newDate;
+    });
+  };
+
+  const handleNextMonth = () => {
+    setSelectedDate(prevDate => {
+      const newDate = new Date(prevDate);
+      newDate.setMonth(newDate.getMonth() + 1);
+      return newDate;
+    });
+  };
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -55,8 +75,8 @@ export default function ExpenseManagementPage() {
   }, [familyId]);
 
   const categorySpending = useMemo(() => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
 
     const spending: Record<string, number> = {};
     let totalSpending = 0;
@@ -65,7 +85,7 @@ export default function ExpenseManagementPage() {
         .filter(t => t.type === 'expense')
         .filter(t => {
             const transactionDate = new Date(t.date);
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
         })
         .forEach(t => {
             if (!spending[t.category]) {
@@ -85,73 +105,94 @@ export default function ExpenseManagementPage() {
         }))
         .sort((a, b) => b.total - a.total);
 
-  }, [transactions]);
+  }, [transactions, selectedDate]);
 
   const totalCurrentMonthSpending = useMemo(() => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
 
     return transactions
         .filter(t => t.type === 'expense')
         .filter(t => {
             const transactionDate = new Date(t.date);
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
         })
         .reduce((sum, t) => sum + t.amount, 0);
-}, [transactions]);
+}, [transactions, selectedDate]);
 
-  const totalCurrentMonthIncome = useMemo(() => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+const totalCurrentMonthInvestment = useMemo(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
 
     return transactions
-        .filter(t => t.type === 'income')
+        .filter(t => t.type === 'investment')
         .filter(t => {
             const transactionDate = new Date(t.date);
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
         })
         .reduce((sum, t) => sum + t.amount, 0);
-  }, [transactions]);
+}, [transactions, selectedDate]);
 
-  const totalCurrentMonthSavings = totalCurrentMonthIncome - totalCurrentMonthSpending;
+
+  const currentMonthTransactions = useMemo(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
+
+    return transactions.filter(t => {
+        const transactionDate = new Date(t.date);
+        return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
+    });
+}, [transactions, selectedDate]);
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8 relative min-h-[calc(100vh-8rem)]">
-        <div className="space-y-2 mb-8">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Expense Management</h1>
-            <p className="text-muted-foreground">
-                Your income, expenses, and savings for the current month.
-            </p>
+        <div className="flex justify-between items-center mb-8">
+            <Button variant="outline" size="icon" onClick={() => router.push('/dashboard')}>
+                <ArrowLeft className="w-6 h-6" />
+            </Button>
+            <div className="space-y-2 text-center">
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Expense Management</h1>
+                <p className="text-muted-foreground">
+                    Your expenses and investments for {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}.
+                </p>
+            </div>
+            <Button variant="outline" size="icon" onClick={() => setIsDrawerOpen(true)}>
+                <History className="w-6 h-6" />
+            </Button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3 md:gap-8 mb-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Total Monthly Income</CardTitle>
+        <div className="flex justify-center items-center mb-4">
+            <Button variant="outline" size="icon" onClick={handlePrevMonth}>
+                <ChevronLeft className="w-6 h-6" />
+            </Button>
+            <div className="text-lg font-semibold mx-4">
+                {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+            </div>
+            <Button variant="outline" size="icon" onClick={handleNextMonth}>
+                <ChevronRight className="w-6 h-6" />
+            </Button>
+        </div>
+
+        <div className="flex w-full gap-4 mb-8">
+            <Card className="flex-1">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Spending</CardTitle>
+                    <ArrowDown className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-4xl font-bold tracking-tight text-primary">
-                    ${totalCurrentMonthIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Total Monthly Spending</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-4xl font-bold tracking-tight text-primary">
+                    <p className="text-lg sm:text-4xl font-bold tracking-tight text-primary">
                     ${totalCurrentMonthSpending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                 </CardContent>
             </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Total Monthly Savings</CardTitle>
+            <Card className="flex-1">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Investment</CardTitle>
+                    <Scale className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-4xl font-bold tracking-tight text-primary">
-                    ${totalCurrentMonthSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <p className="text-lg sm:text-4xl font-bold tracking-tight text-primary">
+                    ${totalCurrentMonthInvestment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                 </CardContent>
             </Card>
@@ -179,7 +220,7 @@ export default function ExpenseManagementPage() {
             )}
         </div>
         
-        <div className="fixed bottom-8 right-8">
+        <div className="fixed bottom-8 right-8 z-50">
             <Button asChild size="lg" className="rounded-full h-16 w-16 shadow-lg">
                 <Link href="/add-transaction">
                     <Plus className="h-8 w-8" />
@@ -187,6 +228,38 @@ export default function ExpenseManagementPage() {
                 </Link>
             </Button>
         </div>
+
+        {isDrawerOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsDrawerOpen(false)}>
+                <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-800 shadow-lg z-50 flex flex-col" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-between p-4 border-b">
+                        <h2 className="text-lg font-bold">Current Month Transactions</h2>
+                        <Button variant="ghost" size="icon" onClick={() => setIsDrawerOpen(false)}>
+                            <X className="w-6 h-6" />
+                        </Button>
+                    </div>
+                    <div className="p-4 overflow-y-auto">
+                        {currentMonthTransactions.length > 0 ? (
+                            <ul className="space-y-4">
+                                {currentMonthTransactions.map(t => (
+                                    <li key={t.id} className="flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium">{t.description}</p>
+                                            <p className="text-sm text-muted-foreground">{new Date(t.date).toLocaleDateString()}</p>
+                                        </div>
+                                        <p className={`font-semibold ${t.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                                            {t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                                        </p>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-muted-foreground text-center py-8">No transactions for this month.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   );
 }
