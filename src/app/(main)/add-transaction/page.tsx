@@ -25,7 +25,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Utensils, Bus, ShoppingBag, PlusCircle, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, PlusCircle, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Transaction, TransactionType } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
@@ -43,15 +43,6 @@ export default function AddTransactionPage() {
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [paidBy, setPaidBy] = useState("");
-  
-  // Investment state
-  const [investmentType, setInvestmentType] = useState("");
-  const [institution, setInstitution] = useState("");
-  const [roi, setRoi] = useState("");
-
-  // Income state
-  const [source, setSource] = useState("");
-  const [frequency, setFrequency] = useState<"one-time" | "recurring">("one-time");
 
   useEffect(() => {
     if (user && currentFamily) {
@@ -66,11 +57,6 @@ export default function AddTransactionPage() {
     setCategory("");
     setAmount("");
     setPaidBy(user?.email || "");
-    setInvestmentType("");
-    setInstitution("");
-    setRoi("");
-    setSource("");
-    setFrequency("one-time");
   };
 
   const handleAddTransaction = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -113,8 +99,6 @@ export default function AddTransactionPage() {
       category: category || activeTab, // Default category to type if empty
       amount: parsedAmount,
       paidBy,
-      ...(activeTab === 'investment' && { investmentType, institution, roi: parseFloat(roi) || undefined }),
-      ...(activeTab === 'income' && { source, frequency }),
     };
 
     try {
@@ -201,49 +185,18 @@ export default function AddTransactionPage() {
             <div className="space-y-2 pt-4">
                 <Label>Quick Categories</Label>
                 <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Food")}><Utensils className="mr-2 h-4 w-4" />Food</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Transport")}><Bus className="mr-2 h-4 w-4" />Transport</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Shopping")}><ShoppingBag className="mr-2 h-4 w-4" />Shopping</Button>
-                </div>
-            </div>
-        )}
-        
-        {/* Income Specific */}
-        {activeTab === 'income' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="source">Income Source</Label>
-                    <Input id="source" value={source} onChange={(e) => setSource(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="frequency">Frequency</Label>
-                    <Select onValueChange={(value: "one-time" | "recurring") => setFrequency(value)} defaultValue={frequency}>
-                        <SelectTrigger id="frequency">
-                            <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="one-time">One-time</SelectItem>
-                            <SelectItem value="recurring">Recurring</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-        )}
-
-        {/* Investment Specific */}
-        {activeTab === 'investment' && (
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                <div className="space-y-2">
-                    <Label htmlFor="investmentType">Investment Type</Label>
-                    <Input id="investmentType" value={investmentType} onChange={(e) => setInvestmentType(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="institution">Institution / Platform</Label>
-                    <Input id="institution" value={institution} onChange={(e) => setInstitution(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="roi">Expected Returns / ROI (%)</Label>
-                    <Input id="roi" type="number" value={roi} onChange={(e) => setRoi(e.target.value)} />
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Groceries")}>Groceries</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Eating out")}>Eating out</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Rent")}>Rent</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Loan")}>Loan</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Fuel")}>Fuel</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Electricity Bill")}>Electricity Bill</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Water Bill")}>Water Bill</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Internet Bill")}>Internet Bill</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Movies")}>Movies</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Chicken")}>Chicken</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Beef")}>Beef</Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Fruits")}>Fruits</Button>
                 </div>
             </div>
         )}
@@ -253,11 +206,16 @@ export default function AddTransactionPage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
-        <div className="space-y-2 mb-8">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Add Transaction</h1>
-            <p className="text-muted-foreground">
-            Add a new expense, income, or investment to your records.
-            </p>
+        <div className="flex items-center mb-8 relative">
+            <Button variant="outline" size="icon" onClick={() => router.back()} className="absolute left-0">
+                <ArrowLeft className="w-6 h-6" />
+            </Button>
+            <div className="flex-grow text-center">
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Add Transaction</h1>
+                <p className="text-muted-foreground">
+                    Add a new expense, income, or investment to your records.
+                </p>
+            </div>
         </div>
 
         <Card>
@@ -265,7 +223,7 @@ export default function AddTransactionPage() {
                 <CardTitle>New Transaction</CardTitle>
                 <CardDescription>Select the transaction type and fill in the details.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-20"> {/* Add padding to the bottom to avoid content being hidden by the floating button */}
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TransactionType)} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="expense">Expense</TabsTrigger>
@@ -274,8 +232,11 @@ export default function AddTransactionPage() {
                     </TabsList>
                     <form onSubmit={handleAddTransaction} className="space-y-4 mt-6">
                         {renderFormFields()}
-                        <div className="flex justify-end pt-4">
-                            <Button type="submit"><PlusCircle className="mr-2 h-4 w-4"/> Add Transaction</Button>
+                        <div className="fixed bottom-8 right-8 z-50">
+                            <Button type="submit" size="lg" className="rounded-full h-16 w-48 shadow-lg flex items-center justify-center">
+                                <PlusCircle className="mr-2 h-6 w-6"/>
+                                <span className="text-lg">Add Transaction</span>
+                            </Button>
                         </div>
                     </form>
                 </Tabs>

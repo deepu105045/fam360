@@ -11,12 +11,27 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowDown, Scale, History, X, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ArrowDown, ArrowUp, Scale, History, X, ArrowLeft, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import type { Transaction } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
 import { useFamily } from "@/hooks/use-family";
 import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { deleteTransaction, updateTransaction } from "@/lib/transactions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 type CategorySpending = {
   category: string;
@@ -31,6 +46,12 @@ export default function ExpenseManagementPage() {
   const { currentFamily } = useFamily();
   const familyId = currentFamily?.id;
   const router = useRouter();
+  const { toast } = useToast();
+
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
 
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => {
@@ -48,29 +69,29 @@ export default function ExpenseManagementPage() {
     });
   };
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      if (!familyId) {
-        console.log("No familyId found.");
-        return;
-      }
-      console.log("Fetching transactions for familyId:", familyId);
-      const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
-      const transactionsCollection = collection(db, `fam360/${env}/families`, familyId, "transactions");
-      const q = query(transactionsCollection);
-      const querySnapshot = await getDocs(q);
-      const fetchedTransactions = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          id: doc.id,
-          date: data.date.toDate(),
-        } as Transaction;
-      });
-      console.log("Fetched Transactions:", fetchedTransactions);
-      setTransactions(fetchedTransactions);
-    };
+  const fetchTransactions = async () => {
+    if (!familyId) {
+      console.log("No familyId found.");
+      return;
+    }
+    console.log("Fetching transactions for familyId:", familyId);
+    const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+    const transactionsCollection = collection(db, `fam360/${env}/families`, familyId, "transactions");
+    const q = query(transactionsCollection);
+    const querySnapshot = await getDocs(q);
+    const fetchedTransactions = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: doc.id,
+        date: data.date.toDate(),
+      } as Transaction;
+    });
+    console.log("Fetched Transactions:", fetchedTransactions);
+    setTransactions(fetchedTransactions);
+  };
 
+  useEffect(() => {
     fetchTransactions();
   }, [familyId]);
 
@@ -133,6 +154,19 @@ const totalCurrentMonthInvestment = useMemo(() => {
         .reduce((sum, t) => sum + t.amount, 0);
 }, [transactions, selectedDate]);
 
+const totalCurrentMonthIncome = useMemo(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
+
+    return transactions
+        .filter(t => t.type === 'income')
+        .filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
+        })
+        .reduce((sum, t) => sum + t.amount, 0);
+}, [transactions, selectedDate]);
+
 
   const currentMonthTransactions = useMemo(() => {
     const selectedMonth = selectedDate.getMonth();
@@ -143,6 +177,52 @@ const totalCurrentMonthInvestment = useMemo(() => {
         return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
     });
 }, [transactions, selectedDate]);
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (transactionId: string) => {
+    setTransactionToDelete(transactionId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!familyId || !transactionToDelete) return;
+    try {
+      await deleteTransaction(familyId, transactionToDelete);
+      toast({ title: "Success", description: "Transaction deleted successfully." });
+      fetchTransactions(); // Refetch transactions after deleting
+    } catch (error) {
+      console.error("Error deleting transaction: ", error);
+      toast({ title: "Error", description: "Could not delete transaction. Please try again.", variant: "destructive" });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setTransactionToDelete(null);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!familyId || !editingTransaction) return;
+
+    const updatedData: Partial<Transaction> = {
+        ...editingTransaction
+    };
+
+    try {
+        await updateTransaction(familyId, editingTransaction.id, updatedData);
+        toast({ title: "Success", description: "Transaction updated successfully." });
+        setIsEditDialogOpen(false);
+        setEditingTransaction(null);
+        fetchTransactions(); // Refetch transactions after updating
+    } catch (error) {
+        console.error("Error updating transaction: ", error);
+        toast({ title: "Error", description: "Could not update transaction. Please try again.", variant: "destructive" });
+    }
+  };
+
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8 relative min-h-[calc(100vh-8rem)]">
@@ -173,15 +253,26 @@ const totalCurrentMonthInvestment = useMemo(() => {
             </Button>
         </div>
 
-        <div className="flex w-full gap-4 mb-8">
+        <div className="flex flex-row gap-4 mb-8">
             <Card className="flex-1">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium">Spending</CardTitle>
                     <ArrowDown className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-lg sm:text-4xl font-bold tracking-tight text-primary">
-                    ${totalCurrentMonthSpending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <p className="text-2xl font-bold tracking-tight text-primary">
+                    {totalCurrentMonthSpending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                </CardContent>
+            </Card>
+            <Card className="flex-1">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Income</CardTitle>
+                    <ArrowUp className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <p className="text-2xl font-bold tracking-tight text-primary">
+                    {totalCurrentMonthIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                 </CardContent>
             </Card>
@@ -191,8 +282,8 @@ const totalCurrentMonthInvestment = useMemo(() => {
                     <Scale className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-lg sm:text-4xl font-bold tracking-tight text-primary">
-                    ${totalCurrentMonthInvestment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <p className="text-2xl font-bold tracking-tight text-primary">
+                    {totalCurrentMonthInvestment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                 </CardContent>
             </Card>
@@ -207,7 +298,7 @@ const totalCurrentMonthInvestment = useMemo(() => {
                             <div className="flex justify-between items-center mb-2">
                                 <p className="font-medium">{category}</p>
                                 <p className="font-semibold text-foreground">
-                                    ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </p>
                             </div>
                             <Progress value={percentage} className="h-2" />
@@ -230,7 +321,7 @@ const totalCurrentMonthInvestment = useMemo(() => {
         </div>
 
         {isDrawerOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsDrawerOpen(false)}>
+             <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setIsDrawerOpen(false)}>
                 <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-800 shadow-lg z-50 flex flex-col" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-between p-4 border-b">
                         <h2 className="text-lg font-bold">Current Month Transactions</h2>
@@ -243,13 +334,26 @@ const totalCurrentMonthInvestment = useMemo(() => {
                             <ul className="space-y-4">
                                 {currentMonthTransactions.map(t => (
                                     <li key={t.id} className="flex justify-between items-center">
-                                        <div>
-                                            <p className="font-medium">{t.description}</p>
+                                        <div className="flex items-center">
+                                            <div className="mr-4">
+                                                <p className="font-medium">{t.description}</p>
+                                                <p className="text-sm text-muted-foreground">{t.category}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`font-semibold ${t.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                                                {t.type === 'income' ? '+' : '-'}{t.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </p>
                                             <p className="text-sm text-muted-foreground">{new Date(t.date).toLocaleDateString()}</p>
                                         </div>
-                                        <p className={`font-semibold ${t.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
-                                            {t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
-                                        </p>
+                                        <div className="flex ml-4">
+                                            <Button variant="ghost" size="icon" onClick={() => handleEdit(t)}>
+                                                <Pencil className="w-4 h-4" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(t.id)}>
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
@@ -260,6 +364,45 @@ const totalCurrentMonthInvestment = useMemo(() => {
                 </div>
             </div>
         )}
+
+        {editingTransaction && (
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Transaction</DialogTitle>
+                        <DialogDescription>Update the details of your transaction.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleUpdate} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-category">Category</Label>
+                            <Input id="edit-category" value={editingTransaction.category} onChange={(e) => setEditingTransaction({...editingTransaction, category: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-amount">Amount</Label>
+                            <Input id="edit-amount" type="number" value={editingTransaction.amount} onChange={(e) => setEditingTransaction({...editingTransaction, amount: parseFloat(e.target.value) || 0})} />
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit">Save Changes</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        )}
+
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete this transaction.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirmDelete}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }

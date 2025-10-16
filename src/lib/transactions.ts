@@ -1,5 +1,5 @@
 
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import { Transaction } from "./types";
 
@@ -20,4 +20,20 @@ export const addTransaction = async (familyId: string, transaction: Omit<Transac
 
   const docRef = await addDoc(transactionsCollection, newTransactionData);
   return docRef.id;
+};
+
+export const updateTransaction = async (familyId: string, transactionId: string, transaction: Partial<Transaction>) => {
+    if (!familyId || !transactionId) {
+        throw new Error("Family ID and Transaction ID are required to update a transaction.");
+    }
+    const transactionDoc = doc(db, `fam360/${env}/families`, familyId, "transactions", transactionId);
+    await updateDoc(transactionDoc, transaction);
+};
+
+export const deleteTransaction = async (familyId: string, transactionId: string) => {
+    if (!familyId || !transactionId) {
+        throw new Error("Family ID and Transaction ID are required to delete a transaction.");
+    }
+    const transactionDoc = doc(db, `fam360/${env}/families`, familyId, "transactions", transactionId);
+    await deleteDoc(transactionDoc);
 };

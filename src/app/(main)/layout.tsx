@@ -33,7 +33,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     return <>{children}</>;
   }
 
-  const showHeader = !pathname.startsWith('/expense-management');
+  const showHeader = pathname === '/dashboard';
 
   return (
     <FamilyProvider>
