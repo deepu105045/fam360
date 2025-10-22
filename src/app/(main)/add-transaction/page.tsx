@@ -31,24 +31,34 @@ import type { Transaction, TransactionType } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { useFamily } from "@/hooks/use-family";
 import { addTransaction } from "@/lib/transactions";
+import { getQuickCategories, QuickCategories } from "@/lib/config";
 
 export default function AddTransactionPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { currentFamily, isLoading } = useFamily();
+  const { currentFamily, isLoading: isFamilyLoading } = useFamily();
   const [activeTab, setActiveTab] = useState<TransactionType>("expense");
 
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [paidBy, setPaidBy] = useState("");
+  const [quickCategories, setQuickCategories] = useState<QuickCategories | null>(null);
 
   useEffect(() => {
     if (user?.email && currentFamily) {
       setPaidBy(user.email);
     }
   }, [user, currentFamily]);
+
+  useEffect(() => {
+    const fetchQuickCategories = async () => {
+      const categories = await getQuickCategories();
+      setQuickCategories(categories);
+    };
+    fetchQuickCategories();
+  }, []);
 
 
   const resetForm = () => {
@@ -60,11 +70,6 @@ export default function AddTransactionPage() {
 
   const handleAddTransaction = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Attempting to add transaction with the following details:");
-    console.log("Date:", date);
-    console.log("Amount:", amount);
-    console.log("Paid By:", paidBy);
-    console.log("Current Family:", currentFamily);
     if (!date || !amount || !paidBy) {
         toast({
             title: "Error",
@@ -117,6 +122,23 @@ export default function AddTransactionPage() {
     }
   };
 
+  const renderQuickCategoryButtons = (categories: string[] | undefined) => {
+    if (!categories) {
+      return <Loader2 className="mr-2 h-4 w-4 animate-spin" />;
+    }
+    return categories.map((cat) => (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        key={cat}
+        onClick={() => setCategory(cat)}
+      >
+        {cat}
+      </Button>
+    ));
+  };
+
   const renderFormFields = () => {
     return (
       <>
@@ -162,7 +184,7 @@ export default function AddTransactionPage() {
                         <SelectValue placeholder="Select a member" />
                     </SelectTrigger>
                     <SelectContent>
-                        {isLoading ? (
+                        {isFamilyLoading ? (
                             <div className="flex items-center justify-center p-2">
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 <span>Loading...</span>
@@ -179,26 +201,14 @@ export default function AddTransactionPage() {
             </div>
         </div>
 
-        {/* Expense Specific */}
-        {activeTab === 'expense' && (
-            <div className="space-y-2 pt-4">
-                <Label>Quick Categories</Label>
-                <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Groceries")}>Groceries</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Eating out")}>Eating out</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Rent")}>Rent</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Loan")}>Loan</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Fuel")}>Fuel</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Electricity Bill")}>Electricity Bill</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Water Bill")}>Water Bill</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Internet Bill")}>Internet Bill</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Movies")}>Movies</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Chicken")}>Chicken</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Beef")}>Beef</Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setCategory("Fruits")}>Fruits</Button>
-                </div>
-            </div>
-        )}
+        <div className="space-y-2 pt-4">
+          <Label>Quick Categories</Label>
+          <div className="flex flex-wrap gap-2">
+            {activeTab === 'expense' && renderQuickCategoryButtons(quickCategories?.expense)}
+            {activeTab === 'income' && renderQuickCategoryButtons(quickCategories?.income)}
+            {activeTab === 'investment' && renderQuickCategoryButtons(quickCategories?.investment)}
+          </div>
+        </div>
       </>
     );
   };
@@ -211,9 +221,6 @@ export default function AddTransactionPage() {
             </Button>
             <div className="flex-grow text-center">
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Add Transaction</h1>
-                <p className="text-muted-foreground">
-                    Add a new expense, income, or investment to your records.
-                </p>
             </div>
         </div>
 
@@ -222,7 +229,7 @@ export default function AddTransactionPage() {
                 <CardTitle>New Transaction</CardTitle>
                 <CardDescription>Select the transaction type and fill in the details.</CardDescription>
             </CardHeader>
-            <CardContent className="pb-20"> {/* Add padding to the bottom to avoid content being hidden by the floating button */}
+            <CardContent className="pb-20">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TransactionType)} className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="expense">Expense</TabsTrigger>
