@@ -47,10 +47,10 @@ export default function AddTransactionPage() {
   const [quickCategories, setQuickCategories] = useState<QuickCategories | null>(null);
 
   useEffect(() => {
-    if (user?.email && currentFamily) {
+    if (!isFamilyLoading && user?.email && currentFamily?.data?.memberEmails?.includes(user.email)) {
       setPaidBy(user.email);
     }
-  }, [user, currentFamily]);
+  }, [user, currentFamily, isFamilyLoading]);
 
   useEffect(() => {
     const fetchQuickCategories = async () => {
