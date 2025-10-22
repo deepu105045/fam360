@@ -225,16 +225,13 @@ const totalCurrentMonthIncome = useMemo(() => {
 
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 md:p-8 relative min-h-[calc(100vh-8rem)]">
-        <div className="flex justify-between items-center mb-8">
+    <div className="container mx-auto p-4 relative min-h-[calc(100vh-8rem)]">
+        <div className="flex justify-between items-center mb-6 sm:mb-8">
             <Button variant="outline" size="icon" onClick={() => router.push('/dashboard')}>
                 <ArrowLeft className="w-6 h-6" />
             </Button>
-            <div className="space-y-2 text-center">
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Expense Management</h1>
-                <p className="text-muted-foreground">
-                    Your expenses and investments for {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}.
-                </p>
+            <div className="space-y-1 text-center">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline">Expense Management</h1>
             </div>
             <Button variant="outline" size="icon" onClick={() => setIsDrawerOpen(true)}>
                 <History className="w-6 h-6" />
@@ -253,36 +250,36 @@ const totalCurrentMonthIncome = useMemo(() => {
             </Button>
         </div>
 
-        <div className="flex flex-row gap-4 mb-8">
+        <div className="flex flex-row gap-2 mb-6 sm:mb-8">
             <Card className="flex-1">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Spending</CardTitle>
+                    <CardTitle className="text-xs font-medium">Spending</CardTitle>
                     <ArrowDown className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-2xl font-bold tracking-tight text-primary">
+                    <p className="text-xl font-bold tracking-tight text-primary">
                     {totalCurrentMonthSpending.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                 </CardContent>
             </Card>
             <Card className="flex-1">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Income</CardTitle>
+                    <CardTitle className="text-xs font-medium">Income</CardTitle>
                     <ArrowUp className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-2xl font-bold tracking-tight text-primary">
+                    <p className="text-xl font-bold tracking-tight text-primary">
                     {totalCurrentMonthIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                 </CardContent>
             </Card>
             <Card className="flex-1">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Investment</CardTitle>
+                    <CardTitle className="text-xs font-medium">Investment</CardTitle>
                     <Scale className="w-4 h-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <p className="text-2xl font-bold tracking-tight text-primary">
+                    <p className="text-xl font-bold tracking-tight text-primary">
                     {totalCurrentMonthInvestment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                 </CardContent>
@@ -290,7 +287,7 @@ const totalCurrentMonthIncome = useMemo(() => {
         </div>
 
         <div className="space-y-6">
-            <h2 className="text-2xl font-semibold tracking-tight font-headline">Category Breakdown</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight font-headline">Category Breakdown</h2>
             {categorySpending.length > 0 ? (
                  categorySpending.map(({ category, total, percentage }) => (
                     <Card key={category}>
@@ -311,10 +308,10 @@ const totalCurrentMonthIncome = useMemo(() => {
             )}
         </div>
         
-        <div className="fixed bottom-8 right-8 z-50">
-            <Button asChild size="lg" className="rounded-full h-16 w-16 shadow-lg">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+            <Button asChild size="lg" className="rounded-full h-14 w-14 sm:h-16 sm:w-16 shadow-lg">
                 <Link href="/add-transaction">
-                    <Plus className="h-8 w-8" />
+                    <Plus className="h-7 w-7 sm:h-8 sm:w-8" />
                     <span className="sr-only">Add Transaction</span>
                 </Link>
             </Button>

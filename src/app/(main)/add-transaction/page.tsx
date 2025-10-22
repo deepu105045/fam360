@@ -45,9 +45,8 @@ export default function AddTransactionPage() {
   const [paidBy, setPaidBy] = useState("");
 
   useEffect(() => {
-    if (user && currentFamily) {
-      console.log("Current Family Details:", currentFamily);
-      setPaidBy(user.email || "");
+    if (user?.email && currentFamily) {
+      setPaidBy(user.email);
     }
   }, [user, currentFamily]);
 
@@ -158,7 +157,7 @@ export default function AddTransactionPage() {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="paidBy">Paid By / Member</Label>
-                <Select onValueChange={setPaidBy} value={paidBy}>
+                <Select onValueChange={setPaidBy} value={paidBy} >
                     <SelectTrigger id="paidBy">
                         <SelectValue placeholder="Select a member" />
                     </SelectTrigger>
