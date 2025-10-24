@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowDown, ArrowUp, Scale, History, X, ArrowLeft, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, TransactionType } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
 import { useFamily } from "@/hooks/use-family";
 import { collection, query, getDocs } from "firebase/firestore";
@@ -32,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type CategorySpending = {
   category: string;
@@ -47,6 +48,7 @@ export default function ExpenseManagementPage() {
   const familyId = currentFamily?.id;
   const router = useRouter();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<TransactionType>('expense');
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -104,6 +106,72 @@ export default function ExpenseManagementPage() {
 
     transactions
         .filter(t => t.type === 'expense')
+        .filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
+        })
+        .forEach(t => {
+            if (!spending[t.category]) {
+                spending[t.category] = 0;
+            }
+            spending[t.category] += t.amount;
+            totalSpending += t.amount;
+        });
+
+    if (totalSpending === 0) return [];
+    
+    return Object.entries(spending)
+        .map(([category, total]) => ({
+            category,
+            total,
+            percentage: (total / totalSpending) * 100,
+        }))
+        .sort((a, b) => b.total - a.total);
+
+  }, [transactions, selectedDate]);
+
+  const incomeCategorySpending = useMemo(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
+
+    const spending: Record<string, number> = {};
+    let totalSpending = 0;
+
+    transactions
+        .filter(t => t.type === 'income')
+        .filter(t => {
+            const transactionDate = new Date(t.date);
+            return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
+        })
+        .forEach(t => {
+            if (!spending[t.category]) {
+                spending[t.category] = 0;
+            }
+            spending[t.category] += t.amount;
+            totalSpending += t.amount;
+        });
+
+    if (totalSpending === 0) return [];
+    
+    return Object.entries(spending)
+        .map(([category, total]) => ({
+            category,
+            total,
+            percentage: (total / totalSpending) * 100,
+        }))
+        .sort((a, b) => b.total - a.total);
+
+  }, [transactions, selectedDate]);
+
+  const investmentCategorySpending = useMemo(() => {
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
+
+    const spending: Record<string, number> = {};
+    let totalSpending = 0;
+
+    transactions
+        .filter(t => t.type === 'investment')
         .filter(t => {
             const transactionDate = new Date(t.date);
             return transactionDate.getMonth() === selectedMonth && transactionDate.getFullYear() === selectedYear;
@@ -286,26 +354,75 @@ const totalCurrentMonthIncome = useMemo(() => {
             </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-2">
             <h2 className="text-xl sm:text-2xl font-semibold tracking-tight font-headline">Category Breakdown</h2>
-            {categorySpending.length > 0 ? (
-                 categorySpending.map(({ category, total, percentage }) => (
-                    <Card key={category}>
-                        <CardContent className="p-4">
-                            <div className="flex justify-between items-center mb-2">
-                                <p className="font-medium">{category}</p>
-                                <p className="font-semibold text-foreground">
-                                    {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </p>
-                            </div>
-                            <Progress value={percentage} className="h-2" />
-                             <p className="text-right text-xs text-muted-foreground mt-1">{percentage.toFixed(1)}% of total</p>
-                        </CardContent>
-                    </Card>
-                ))
-            ) : (
-                <p className="text-muted-foreground text-center py-8">No expenses recorded for this month.</p>
-            )}
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TransactionType)} className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="expense">Expense</TabsTrigger>
+                    <TabsTrigger value="income">Income</TabsTrigger>
+                    <TabsTrigger value="investment">Investment</TabsTrigger>
+                </TabsList>
+                <TabsContent value="expense">
+                    {categorySpending.length > 0 ? (
+                        categorySpending.map(({ category, total, percentage }) => (
+                            <Card key={category} className="mt-2">
+                                <CardContent className="p-3">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <p className="text-sm font-medium">{category}</p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <Progress value={percentage} className="h-2" />
+                                    <p className="text-right text-xs text-muted-foreground mt-1">{percentage.toFixed(1)}% of total</p>
+                                </CardContent>
+                            </Card>
+                        ))
+                    ) : (
+                        <p className="text-muted-foreground text-center py-8">No expenses recorded for this month.</p>
+                    )}
+                </TabsContent>
+                <TabsContent value="income">
+                    {incomeCategorySpending.length > 0 ? (
+                        incomeCategorySpending.map(({ category, total, percentage }) => (
+                            <Card key={category} className="mt-2">
+                                <CardContent className="p-3">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <p className="text-sm font-medium">{category}</p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <Progress value={percentage} className="h-2" />
+                                    <p className="text-right text-xs text-muted-foreground mt-1">{percentage.toFixed(1)}% of total</p>
+                                </CardContent>
+                            </Card>
+                        ))
+                    ) : (
+                        <p className="text-muted-foreground text-center py-8">No income recorded for this month.</p>
+                    )}
+                </TabsContent>
+                <TabsContent value="investment">
+                    {investmentCategorySpending.length > 0 ? (
+                        investmentCategorySpending.map(({ category, total, percentage }) => (
+                            <Card key={category} className="mt-2">
+                                <CardContent className="p-3">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <p className="text-sm font-medium">{category}</p>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <Progress value={percentage} className="h-2" />
+                                    <p className="text-right text-xs text-muted-foreground mt-1">{percentage.toFixed(1)}% of total</p>
+                                </CardContent>
+                            </Card>
+                        ))
+                    ) : (
+                        <p className="text-muted-foreground text-center py-8">No investments recorded for this month.</p>
+                    )}
+                </TabsContent>
+            </Tabs>
         </div>
         
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
