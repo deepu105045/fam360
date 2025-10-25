@@ -384,7 +384,7 @@ const totalCurrentMonthIncome = useMemo(() => {
                     {categorySpending.length > 0 ? (
                         categorySpending.map(({ category, total, percentage }) => (
                             <Card key={category} className="mt-2">
-                                <CardContent className="p-3">
+                                <CardContent className="p-4">
                                     <div className="flex justify-between items-center mb-1">
                                         <p className="text-sm font-medium">{category}</p>
                                         <p className="text-sm font-semibold text-foreground">
@@ -404,7 +404,7 @@ const totalCurrentMonthIncome = useMemo(() => {
                     {incomeCategorySpending.length > 0 ? (
                         incomeCategorySpending.map(({ category, total, percentage }) => (
                             <Card key={category} className="mt-2">
-                                <CardContent className="p-3">
+                                <CardContent className="p-4">
                                     <div className="flex justify-between items-center mb-1">
                                         <p className="text-sm font-medium">{category}</p>
                                         <p className="text-sm font-semibold text-foreground">
@@ -424,7 +424,7 @@ const totalCurrentMonthIncome = useMemo(() => {
                     {investmentCategorySpending.length > 0 ? (
                         investmentCategorySpending.map(({ category, total, percentage }) => (
                             <Card key={category} className="mt-2">
-                                <CardContent className="p-3">
+                                <CardContent className="p-4">
                                     <div className="flex justify-between items-center mb-1">
                                         <p className="text-sm font-medium">{category}</p>
                                         <p className="text-sm font-semibold text-foreground">
