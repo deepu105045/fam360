@@ -443,11 +443,11 @@ const totalCurrentMonthIncome = useMemo(() => {
             </Tabs>
         </div>
         
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-            <Button asChild size="lg" className="rounded-full h-14 w-14 sm:h-16 sm:w-16 shadow-lg">
-                <Link href="/add-transaction">
-                    <Plus className="h-7 w-7 sm:h-8 sm:w-8" />
-                    <span className="sr-only">Add Transaction</span>
+        <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-50">
+            <Button asChild size="lg" className="rounded-full shadow-lg px-6">
+                <Link href="/add-transaction" className="flex items-center gap-2">
+                    <Plus className="h-6 w-6" />
+                    <span>Add Transaction</span>
                 </Link>
             </Button>
         </div>

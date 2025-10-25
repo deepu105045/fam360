@@ -13,30 +13,16 @@ import type { Transaction } from "@/lib/types";
 import { useFamily } from "@/hooks/use-family";
 import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
 import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
     ChartLegend,
     ChartLegendContent,
-    ChartConfig
 } from "@/components/ui/chart";
 
-const chartConfig = {
-    expense: {
-      label: "Expense",
-      color: "#ef4444",
-    },
-    income: {
-      label: "Income",
-      color: "#22c55e",
-    },
-    investment: {
-      label: "Investment",
-      color: "#3b82f6",
-    },
-  } satisfies ChartConfig;
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
 
 export default function SpendingAnalysisPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -87,22 +73,53 @@ export default function SpendingAnalysisPage() {
     fetchTransactions();
   }, [familyId]);
 
-  const spendingByPaidBy = useMemo(() => {
-    const spending: Record<string, { expense: number; income: number; investment: number }> = {};
-
+  const spendingByMember = useMemo(() => {
+    const spending: Record<string, number> = {};
     transactions
+      .filter(t => t.type === 'expense')
       .forEach(t => {
         if (!spending[t.paidBy]) {
-          spending[t.paidBy] = { expense: 0, income: 0, investment: 0 };
+          spending[t.paidBy] = 0;
         }
-        spending[t.paidBy][t.type] += t.amount;
+        spending[t.paidBy] += t.amount;
       });
-
-    return Object.entries(spending).map(([paidBy, values]) => ({
-      paidBy,
-      ...values,
+    return Object.entries(spending).map(([name, value]) => ({
+      name,
+      value,
     }));
-  }, [transactions, selectedDate]);
+  }, [transactions]);
+
+  const incomeByMember = useMemo(() => {
+    const income: Record<string, number> = {};
+    transactions
+      .filter(t => t.type === 'income')
+      .forEach(t => {
+        if (!income[t.paidBy]) {
+          income[t.paidBy] = 0;
+        }
+        income[t.paidBy] += t.amount;
+      });
+    return Object.entries(income).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [transactions]);
+
+  const investmentByMember = useMemo(() => {
+    const investment: Record<string, number> = {};
+    transactions
+      .filter(t => t.type === 'investment')
+      .forEach(t => {
+        if (!investment[t.paidBy]) {
+          investment[t.paidBy] = 0;
+        }
+        investment[t.paidBy] += t.amount;
+      });
+    return Object.entries(investment).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [transactions]);
 
 
   return (
@@ -130,26 +147,55 @@ export default function SpendingAnalysisPage() {
         </div>
 
         <div className="space-y-2 mt-4">
-            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight font-headline">Spending by Member</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight font-headline">Member Spending Distribution</h2>
             <Card>
-                <CardContent className="p-4">
-                    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-                        <BarChart data={spendingByPaidBy}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                                dataKey="paidBy"
-                                tickLine={false}
-                                tickMargin={10}
-                                axisLine={false}
-                                tickFormatter={(value) => value.slice(0, 3)}
-                            />
-                            <YAxis />
+                <CardContent className="p-4 flex justify-center">
+                    <ChartContainer config={{}} className="min-h-[300px] max-w-[400px]">
+                        <PieChart>
                             <ChartTooltip content={<ChartTooltipContent />} />
+                            <Pie data={spendingByMember} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
+                                {spendingByMember.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
                             <ChartLegend content={<ChartLegendContent />} />
-                            <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
-                            <Bar dataKey="income" fill="var(--color-income)" radius={4} />
-                            <Bar dataKey="investment" fill="var(--color-investment)" radius={4} />
-                        </BarChart>
+                        </PieChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="space-y-2 mt-4">
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight font-headline">Member Income Distribution</h2>
+            <Card>
+                <CardContent className="p-4 flex justify-center">
+                    <ChartContainer config={{}} className="min-h-[300px] max-w-[400px]">
+                        <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Pie data={incomeByMember} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
+                                {incomeByMember.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <ChartLegend content={<ChartLegendContent />} />
+                        </PieChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        </div>
+        <div className="space-y-2 mt-4">
+            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight font-headline">Member Investment Distribution</h2>
+            <Card>
+                <CardContent className="p-4 flex justify-center">
+                    <ChartContainer config={{}} className="min-h-[300px] max-w-[400px]">
+                        <PieChart>
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Pie data={investmentByMember} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
+                                {investmentByMember.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <ChartLegend content={<ChartLegendContent />} />
+                        </PieChart>
                     </ChartContainer>
                 </CardContent>
             </Card>
