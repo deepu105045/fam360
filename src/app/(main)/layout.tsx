@@ -1,7 +1,5 @@
-
 "use client";
 
-import { MainHeader } from "@/components/main-header";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { FamilyProvider } from "@/hooks/use-family";
 import { useAuth } from "@/hooks/use-auth";
@@ -33,12 +31,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
     return <>{children}</>;
   }
 
-  const showHeader = pathname === '/dashboard';
-
   return (
     <FamilyProvider>
       <div className="flex min-h-screen flex-col">
-        {showHeader && <MainHeader />}
         <div className="flex flex-1">
           <SidebarNav />
           <main className="flex-1">{children}</main>

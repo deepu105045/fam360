@@ -55,7 +55,7 @@ export const FamilyProvider = ({ children }: { children: React.ReactNode }) => {
     if (!authLoading) {
         fetchFamilies();
     }
-  }, [fetchFamilies, authLoading]);
+  }, [user, authLoading, router]);
 
   const switchFamily = (familyId: string) => {
     const family = families.find((f) => f.id === familyId);

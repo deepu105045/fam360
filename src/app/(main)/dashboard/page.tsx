@@ -13,8 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Wallet, Home, ClipboardList, MessagesSquare, Users, LogOut, Settings, User, PlusCircle, ChevronsUpDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Wallet, Home, ClipboardList, MessagesSquare, Users, LogOut, User as UserIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -59,8 +60,8 @@ const features = [
 ];
 
 export default function DashboardPage() {
-  const { user, loading: authLoading, signOut } = useAuth();
-  const { families, isLoading: familyLoading } = useFamily();
+  const { user, signOut, loading: authLoading } = useAuth();
+  const { families, currentFamily, switchFamily, isLoading: familyLoading } = useFamily();
   const router = useRouter();
 
   useEffect(() => {
@@ -69,51 +70,90 @@ export default function DashboardPage() {
     }
   }, [user, families, authLoading, familyLoading, router]);
 
+  const handleFamilySwitch = (familyId: string) => {
+    if (familyId === currentFamily?.id) return;
+    switchFamily(familyId);
+  };
+
   if (authLoading || familyLoading || !user) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
 
-  const userInitials = user.email ? user.email.slice(0, 2).toUpperCase() : "U";
-
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
-      <div className="flex justify-between items-start mb-8">
-        <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
-            <p className="text-muted-foreground">
-                Welcome back! Here&apos;s your family overview.
-            </p>
-        </div>
-        <DropdownMenu>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
+        <div className="flex items-center space-x-2">
+          {/* Family Switcher */}
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.photoURL || ''} alt="User avatar" />
-                        <AvatarFallback>{userInitials}</AvatarFallback>
-                    </Avatar>
-                </Button>
+              <Button variant="outline" className="w-[180px] justify-between">
+                {currentFamily?.data.familyName || "Select Family"}
+                <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[180px]" align="end">
+              <DropdownMenuLabel>Switch Family</DropdownMenuLabel>
+              <DropdownMenuGroup>
+                {families.map((family) => (
+                  <DropdownMenuItem
+                    key={family.id}
+                    onClick={() => handleFamilySwitch(family.id)}
+                    disabled={familyLoading}
+                  >
+                    <span>{family.data.familyName}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/family/create")}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                <span>Create New Family</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* User Profile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={user?.photoURL || ""} alt={user?.displayName || "Guest"} />
+                  <AvatarFallback>{user?.displayName?.[0] || "G"}</AvatarFallback>
+                </Avatar>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName || 'User'}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                            {user.email}
-                        </p>
-                    </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/profile')}>
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                </DropdownMenuItem>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user?.displayName || "Guest"}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email || "guest@example.com"}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/family-settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Family Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={signOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="mb-8 space-y-2">
+        <p className="text-muted-foreground">
+          Welcome back! Here&apos;s your family overview.
+        </p>
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
