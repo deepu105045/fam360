@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowDown, ArrowUp, Scale, History, X, ArrowLeft, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Plus, ArrowDown, ArrowUp, Scale, History, X, ArrowLeft, ChevronLeft, ChevronRight, Pencil, Trash2, EllipsisVertical } from "lucide-react";
 import type { Transaction, TransactionType } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
 import { useFamily } from "@/hooks/use-family";
@@ -33,6 +33,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu";
 
 type CategorySpending = {
   category: string;
@@ -301,9 +307,21 @@ const totalCurrentMonthIncome = useMemo(() => {
             <div className="space-y-1 text-center">
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline">Expense Management</h1>
             </div>
-            <Button variant="outline" size="icon" onClick={() => setIsDrawerOpen(true)}>
-                <History className="w-6 h-6" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <EllipsisVertical className="w-6 h-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setIsDrawerOpen(true)}>
+                  View Transactions
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/spending-analysis')}>
+                  Spending Analysis
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
 
         <div className="flex justify-center items-center mb-4">
