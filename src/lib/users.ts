@@ -12,7 +12,7 @@ import {
 import { db } from "./firebase";
 import { User } from "./types";
 
-const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+const env = import.meta.env.VITE_FIREBASE_ENV || 'dev';
 const usersCollection = collection(db, `fam360/${env}/users`);
 
 export const createUser = async (

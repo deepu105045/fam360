@@ -3,7 +3,7 @@ import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "
 import { db } from "./firebase";
 import { Transaction } from "./types";
 
-const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+const env = import.meta.env.VITE_FIREBASE_ENV || 'dev';
 
 export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
   const { familyId } = transaction;

@@ -5,13 +5,13 @@ import { getFirestore } from "firebase/firestore";
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBELonaNwysF-H-MPtadqHJeEzNKWAqhvs",
-  authDomain: "fam360-official.firebaseapp.com",
-  projectId: "fam360-official",
-  storageBucket: "fam360-official.firebasestorage.app",
-  messagingSenderId: "88183606781",
-  appId: "1:88183606781:web:5086e666336f8c51cddd94",
-  measurementId: "G-QSVX0R2NQH"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

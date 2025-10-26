@@ -1,9 +1,9 @@
 
-import { collection, query, where, getDocs, addDoc, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, arrayUnion, arrayRemove, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import { Family } from "./types";
 
-const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+const env = import.meta.env.VITE_FIREBASE_ENV || 'dev';
 const familiesCollection = collection(db, `fam360/${env}/families`);
 
 export const getFamiliesForUser = async (userEmail: string) => {
@@ -19,8 +19,8 @@ export const createFamily = async (payload: { familyName: string, userEmail: str
         name: familyName,
         members: [userEmail],
         memberEmails: [userEmail],
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
     });
     return newFamilyRef.id;
 };

@@ -8,7 +8,7 @@ export interface QuickCategories {
 }
 
 export const getQuickCategories = async (): Promise<QuickCategories | null> => {
-  const env = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+  const env = import.meta.env.VITE_FIREBASE_ENV || 'dev';
   const docRef = doc(db, `fam360/${env}/config/quick-categories`);
   const docSnap = await getDoc(docRef);
 
