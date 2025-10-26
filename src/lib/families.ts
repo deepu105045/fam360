@@ -1,3 +1,4 @@
+
 import { collection, query, where, getDocs, addDoc, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import { Family } from "./types";
@@ -45,4 +46,15 @@ export const removeFamilyMember = async (familyId: string, memberEmail: string) 
     await updateDoc(familyDocRef, {
         memberEmails: arrayRemove(memberEmail)
     });
+};
+
+export const getFamilyMembers = async (familyId: string) => {
+    const family = await getFamily(familyId);
+    return family ? family.memberEmails : [];
+};
+
+export const getAllFamilies = async () => {
+    const querySnapshot = await getDocs(familiesCollection);
+    const families = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Family));
+    return families;
 };
