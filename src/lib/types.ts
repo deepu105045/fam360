@@ -6,6 +6,7 @@ export type User = {
   photoURL: string;
   createdAt: number;
   lastLogin: number;
+  primaryFamily?: string;
 };
 
 export type Family = {
