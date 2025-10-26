@@ -1,20 +1,18 @@
 
-"use client";
-
 import { useState, useEffect } from "react";
-import { useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
+import { useNavigate } from 'react-router-dom';
+import { Button } from "../components/ui/button";
 import { Plus, ArrowLeft, Pencil, Trash2, Wallet } from "lucide-react";
-import { useFamily } from "@/hooks/use-family";
+import { useFamily } from "../hooks/use-family";
 import { collection, query, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import type { Asset, AssetType } from "@/lib/types";
-import { deleteAsset } from "@/lib/assets";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useToast } from "@/hooks/use-toast";
+import { db } from "../lib/firebase";
+import type { Asset, AssetType } from "../lib/types";
+import { deleteAsset } from "../lib/assets";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../components/ui/alert-dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../components/ui/accordion";
+import { useToast } from "../hooks/use-toast";
 import AddAssetForm from "./add-asset-form";
 import EditAssetForm from "./edit-asset-form";
 
@@ -27,12 +25,12 @@ export default function AssetManagementPage() {
     const [assetToDelete, setAssetToDelete] = useState<string | null>(null);
     const { currentFamily } = useFamily();
     const familyId = currentFamily?.id;
-    const router = useRouter();
+    const navigate = useNavigate();
     const { toast } = useToast();
 
     const fetchAssets = async () => {
         if (!familyId) return;
-        const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+        const env = process.env.NODE_ENV || 'dev';
         const assetsCollection = collection(db, `fam360/${env}/families`, familyId, "assets");
         const q = query(assetsCollection);
         const querySnapshot = await getDocs(q);
@@ -89,7 +87,7 @@ export default function AssetManagementPage() {
     return (
         <div className="container mx-auto p-4 relative min-h-[calc(100vh-8rem)]">
             <div className="flex justify-between items-center mb-6 sm:mb-8">
-                <Button variant="outline" size="icon" onClick={() => router.push('/dashboard')}>
+                <Button variant="outline" size="icon" onClick={() => navigate('/dashboard')}>
                     <ArrowLeft className="w-6 h-6" />
                 </Button>
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-headline">Asset Management</h1>
