@@ -4,13 +4,6 @@ import { getUserByEmail } from "@/lib/users";
 import FamilyPageClient from "./family-page-client";
 import { Family, User } from "@/lib/types";
 
-// Define props for the page component to make them explicit
-interface FamilyPageProps {
-  params: {
-    familyId: string;
-  };
-}
-
 // Ensure that generateStaticParams returns a valid array of params
 export async function generateStaticParams() {
   const families = await getAllFamilies();
@@ -39,7 +32,7 @@ async function getFamilyData(familyId: string): Promise<{ family: Family; member
   };
 }
 
-export default async function FamilyPage({ params }: FamilyPageProps) {
+export default async function FamilyPage({ params }: { params: { familyId: string } }) {
   const data = await getFamilyData(params.familyId);
 
   if (!data) {
