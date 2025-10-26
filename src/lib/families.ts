@@ -12,7 +12,8 @@ export const getFamiliesForUser = async (userEmail: string) => {
     return families;
 };
 
-export const createFamily = async (familyName: string, userEmail: string) => {
+export const createFamily = async (payload: { familyName: string, userEmail: string }) => {
+    const { familyName, userEmail } = payload;
     const newFamilyRef = await addDoc(familiesCollection, {
         name: familyName,
         members: [userEmail],
