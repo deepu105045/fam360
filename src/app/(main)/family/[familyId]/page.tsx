@@ -55,3 +55,10 @@ export default async function FamilyPage({ params }: { params: { familyId: strin
     />
   );
 }
+
+// Define PageProps
+interface PageProps {
+  params: {
+    familyId: string;
+  };
+}
