@@ -1,7 +1,8 @@
 
 import { getAllFamilies, getFamily, getFamilyMembers } from "@/lib/families";
-import { getUser } from "@/lib/users";
+import { getUserByEmail } from "@/lib/users";
 import FamilyPageClient from "./family-page-client";
+import { User } from "@/lib/types";
 
 export async function generateStaticParams() {
   const families = await getAllFamilies();
@@ -12,17 +13,17 @@ async function getFamilyData(familyId: string) {
   const family = await getFamily(familyId);
   if (!family) return null;
 
-  const members = await getFamilyMembers(familyId);
+  const memberEmails = await getFamilyMembers(familyId);
   const membersWithUserData = await Promise.all(
-    members.map(async (member) => {
-      const user = await getUser(member.userId);
-      return { ...member, user };
+    memberEmails.map(async (email) => {
+      const user = await getUserByEmail(email);
+      return user;
     })
   );
 
   return {
     family,
-    members: membersWithUserData,
+    members: membersWithUserData.filter((user) => user !== null) as User[],
   };
 }
 

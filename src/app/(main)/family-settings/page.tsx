@@ -26,23 +26,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { getFamiliesForUser, getFamilyMembers, addFamilyMember } from "@/lib/families";
-import { getUser } from "@/lib/users";
-import { Membership, User } from "@/lib/types";
-
-type Member = Membership & { user: User | null };
+import { getUserByEmail } from "@/lib/users";
+import { User } from "@/lib/types";
 
 export default function FamilySettingsPage() {
   const { user } = useAuth();
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
   const [familyId, setFamilyId] = useState<string | null>(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [newMemberEmail, setNewMemberEmail] = useState("");
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editingMember, setEditingMember] = useState<User | null>(null);
   const { toast } = useToast();
 
-  const currentUserRole = members.find(m => m.userId === user?.uid)?.role;
-  const isCurrentUserAdmin = currentUserRole === 'admin';
+  // Assuming the first member is the admin, this needs to be revisited for a more robust role management
+  const isCurrentUserAdmin = members.length > 0 && members[0].email === user?.email;
 
   useEffect(() => {
     if (!user?.email) return;
@@ -53,14 +51,13 @@ export default function FamilySettingsPage() {
         if (families.length > 0) {
           const currentFamilyId = families[0].id;
           setFamilyId(currentFamilyId);
-          const memberData = await getFamilyMembers(currentFamilyId);
+          const memberEmails = await getFamilyMembers(currentFamilyId);
           const membersWithUserData = await Promise.all(
-            memberData.map(async (member) => {
-              const userData = await getUser(member.userId);
-              return { ...member, user: userData };
+            memberEmails.map(async (email) => {
+              return await getUserByEmail(email);
             })
           );
-          setMembers(membersWithUserData);
+          setMembers(membersWithUserData.filter(m => m !== null) as User[]);
         }
       } catch (error) {
         console.error("Error fetching family data:", error);
@@ -81,14 +78,13 @@ export default function FamilySettingsPage() {
 
     try {
       await addFamilyMember(familyId, newMemberEmail);
-      const memberData = await getFamilyMembers(familyId);
+      const memberEmails = await getFamilyMembers(familyId);
       const membersWithUserData = await Promise.all(
-        memberData.map(async (member) => {
-          const userData = await getUser(member.userId);
-          return { ...member, user: userData };
+        memberEmails.map(async (email) => {
+            return await getUserByEmail(email);
         })
       );
-      setMembers(membersWithUserData);
+      setMembers(membersWithUserData.filter(m => m !== null) as User[]);
       setNewMemberEmail("");
       setAddDialogOpen(false);
       toast({ title: "Success", description: "Family member added." });
@@ -117,11 +113,11 @@ export default function FamilySettingsPage() {
         toast({ title: "Error", description: "You cannot remove yourself from the family.", variant: "destructive" });
         return;
     }
-    setMembers(members.filter(m => m.userId !== memberId));
+    setMembers(members.filter(m => m.uid !== memberId));
     toast({ title: "Success", description: "Family member removed." });
   }
 
-  const openEditDialog = (member: Member) => {
+  const openEditDialog = (member: User) => {
     setEditingMember({ ...member });
     setEditDialogOpen(true);
   }
@@ -168,15 +164,15 @@ export default function FamilySettingsPage() {
         <CardContent>
           <div className="space-y-4">
             {members.map((member) => (
-              <div key={member.userId} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
+              <div key={member.uid} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50">
                 <div className="flex items-center gap-4">
                   <Avatar>
-                    <AvatarImage src={member.user?.photoURL} />
-                    <AvatarFallback>{member.user?.displayName?.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={member.photoURL} />
+                    <AvatarFallback>{member.displayName?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{member.user?.displayName}</p>
-                    <p className="text-sm text-muted-foreground">{member.user?.email}</p>
+                    <p className="font-medium">{member.displayName}</p>
+                    <p className="text-sm text-muted-foreground">{member.email}</p>
                   </div>
                 </div>
                 {isCurrentUserAdmin && (
@@ -185,7 +181,7 @@ export default function FamilySettingsPage() {
                       <Edit className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteMember(member.userId)}>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteMember(member.uid)}>
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>
                     </Button>
@@ -209,13 +205,14 @@ export default function FamilySettingsPage() {
                 <Input 
                     id="edit-name" 
                     name="edit-name" 
-                    value={editingMember?.user?.displayName || ''} 
+                    value={editingMember?.displayName || ''} 
                     readOnly
                 />
               </div>
                <div className="space-y-2">
                 <Label>Role</Label>
-                 <p className="text-sm text-muted-foreground p-2">{editingMember?.role}</p>
+                 {/* This needs a more robust role management system */}
+                 <p className="text-sm text-muted-foreground p-2">Member</p>
               </div>
               <DialogFooter>
                 <DialogClose asChild>

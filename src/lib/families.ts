@@ -26,6 +26,9 @@ export const createFamily = async (payload: { familyName: string, userEmail: str
 };
 
 export const getFamily = async (familyId: string) => {
+    if (!familyId) {
+        return null;
+    }
     const familyDocRef = doc(db, `fam360/${env}/families`, familyId);
     const familyDoc = await getDoc(familyDocRef);
     if (familyDoc.exists()) {
