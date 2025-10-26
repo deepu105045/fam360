@@ -24,16 +24,36 @@ export type Membership = {
 export type TransactionType = "expense" | "income" | "investment";
 
 export type Transaction = {
-  id: number;
+  id: string;
   familyId: string;
   type: TransactionType;
   date: Date;
   category: string;
   amount: number;
   paidBy: string;
-  investmentType?: string;
-  institution?: string;
-  roi?: number;
-  source?: string;
-  frequency?: "one-time" | "recurring";
+  description: string;
+};
+
+export enum AssetType {
+    RealEstate = "Real Estate",
+    BankDeposit = "Bank Deposit",
+    BankRD = "Bank RD",
+    Insurance = "Insurance",
+    Equity = "Equity",
+    MutualFund = "Mutual Fund",
+    NPS = "NPS",
+    PPF = "PPF",
+    Other = "Other"
+}
+
+export type Asset = {
+    id: string;
+    familyId: string;
+    type: AssetType;
+    name: string;
+    amount: number;
+    accountNumber?: string;
+    notes?: string;
+    createdAt: Date;
+    updatedAt: Date;
 };

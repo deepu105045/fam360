@@ -36,7 +36,7 @@ const features = [
   {
     title: "Asset Management",
     description: "Keep a record of family assets.",
-    href: "/assets",
+    href: "/asset-management",
     icon: <Home className="h-8 w-8 text-primary" />,
   },
   {
