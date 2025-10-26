@@ -32,6 +32,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFamily } from "@/hooks/use-family";
 import { addTransaction } from "@/lib/transactions";
 import { getQuickCategories, QuickCategories } from "@/lib/config";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AddTransactionPage() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function AddTransactionPage() {
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [paidBy, setPaidBy] = useState("");
+  const [description, setDescription] = useState("");
   const [quickCategories, setQuickCategories] = useState<QuickCategories | null>(null);
 
   useEffect(() => {
@@ -66,6 +68,7 @@ export default function AddTransactionPage() {
     setCategory("");
     setAmount("");
     setPaidBy(user?.email || "");
+    setDescription("");
   };
 
   const handleAddTransaction = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -98,11 +101,13 @@ export default function AddTransactionPage() {
     }
     
     const newTransaction: Omit<Transaction, 'id'> = {
+      familyId: currentFamily.id,
       type: activeTab,
       date,
       category: category || activeTab, // Default category to type if empty
       amount: parsedAmount,
       paidBy,
+      description,
     };
 
     try {
@@ -198,6 +203,10 @@ export default function AddTransactionPage() {
                         )}
                     </SelectContent>
                 </Select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
         </div>
 
