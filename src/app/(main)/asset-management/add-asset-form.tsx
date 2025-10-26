@@ -36,7 +36,7 @@ export default function AddAssetForm({ familyId, onAssetAdded }: AddAssetFormPro
 
     const onSubmit = async (data: AssetFormData) => {
         try {
-            await addAsset(familyId, data);
+            await addAsset({ ...data, familyId });
             toast({ title: "Success", description: "Asset added successfully." });
             onAssetAdded();
         } catch (error) {

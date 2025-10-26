@@ -8,8 +8,8 @@ const getAssetsCollection = (familyId: string) => {
     return collection(db, `fam360/${env}/families`, familyId, "assets");
 };
 
-export const addAsset = async (familyId: string, asset: Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const assetsCollection = getAssetsCollection(familyId);
+export const addAsset = async (asset: Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const assetsCollection = getAssetsCollection(asset.familyId);
     const newAsset = {
         ...asset,
         createdAt: new Date(),

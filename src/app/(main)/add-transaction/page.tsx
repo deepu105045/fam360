@@ -111,7 +111,7 @@ export default function AddTransactionPage() {
     };
 
     try {
-      await addTransaction(currentFamily.id, newTransaction);
+      await addTransaction(newTransaction);
       toast({
           title: "Success!",
           description: `Your ${activeTab} has been added.`,

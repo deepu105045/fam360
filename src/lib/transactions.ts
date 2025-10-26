@@ -5,14 +5,14 @@ import { Transaction } from "./types";
 
 const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
 
-export const addTransaction = async (familyId: string, transaction: Omit<Transaction, 'id'>) => {
+export const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+  const { familyId } = transaction;
   if (!familyId) {
     throw new Error("Family ID is required to add a transaction.");
   }
   const transactionsCollection = collection(db, `fam360/${env}/families`, familyId, "transactions");
   const newTransactionData = {
     ...transaction,
-    familyId,
     createdAt: serverTimestamp(),
   };
 
