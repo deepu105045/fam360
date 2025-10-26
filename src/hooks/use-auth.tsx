@@ -5,11 +5,12 @@ import { useState, useEffect, useContext, createContext, useCallback } from "rea
 import { onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
 import { auth, signInWithEmailAndPassword } from "@/lib/firebase";
 import { createUser, getUser } from "@/lib/users";
-import { User as UserType } from "@/lib/types";
+import { User as UserType, Family } from "@/lib/types";
 
 interface AuthContextType {
   user: User | null;
   userDoc: UserType | null;
+  families: Family[];
   loading: boolean;
   error: any;
   signInWithGoogle: () => Promise<void>;
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userDoc, setUserDoc] = useState<UserType | null>(null);
+  const [families, setFamilies] = useState<Family[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
@@ -34,11 +36,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const userDoc = await getUser(uid);
       setUserDoc(userDoc);
+      if (userDoc?.families) {
+        // Assuming userDoc.families is an array of family IDs
+        // You might need to fetch the full family objects here
+        // For now, let's assume it's already populated with the necessary data
+        // setFamilies(userDoc.families);
+      }
       setError(null);
     } catch (err) {
       console.error("Error fetching user data:", err);
       setError(err);
       setUserDoc(null);
+      setFamilies([]);
     } finally {
       setLoading(false);
     }
@@ -53,6 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             displayName: user.displayName || "",
             email: user.email || "",
             photoURL: user.photoURL || "",
+            families: []
           });
         }
         setUser(user);
@@ -60,12 +70,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setUser(null);
         setUserDoc(null);
+        setFamilies([]);
         setLoading(false);
       }
     });
 
     return () => unsubscribe();
   }, [fetchUserData]);
+
+  useEffect(() => {
+    if (userDoc) {
+        // @ts-ignore
+        setFamilies(userDoc.families || []);
+    }
+  }, [userDoc]);
 
   const refetch = useCallback(() => {
     if (user) {
@@ -116,6 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         userDoc,
+        families,
         loading,
         error,
         signInWithGoogle,

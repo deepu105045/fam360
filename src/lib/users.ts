@@ -23,6 +23,7 @@ export const createUser = async (
   await setDoc(userRef, {
     ...data,
     uid,
+    families: [],
     createdAt: serverTimestamp(),
     lastLogin: serverTimestamp(),
   });
