@@ -2,22 +2,34 @@
 import { getAllFamilies, getFamily, getFamilyMembers } from "@/lib/families";
 import { getUserByEmail } from "@/lib/users";
 import FamilyPageClient from "./family-page-client";
-import { User } from "@/lib/types";
+import { Family, User } from "@/lib/types";
 
-export async function generateStaticParams() {
-  const families = await getAllFamilies();
-  return families.map((family) => ({ familyId: family.id }));
+// Define props for the page component to make them explicit
+interface FamilyPageProps {
+  params: {
+    familyId: string;
+  };
 }
 
-async function getFamilyData(familyId: string) {
+// Ensure that generateStaticParams returns a valid array of params
+export async function generateStaticParams() {
+  const families = await getAllFamilies();
+  return families
+    .filter((family) => family && family.id)
+    .map((family) => ({ familyId: family.id }));
+}
+
+// Safeguard getFamilyData against invalid familyId
+async function getFamilyData(familyId: string): Promise<{ family: Family; members: User[] } | null> {
+  if (!familyId) return null;
+
   const family = await getFamily(familyId);
   if (!family) return null;
 
   const memberEmails = await getFamilyMembers(familyId);
   const membersWithUserData = await Promise.all(
     memberEmails.map(async (email) => {
-      const user = await getUserByEmail(email);
-      return user;
+      return await getUserByEmail(email);
     })
   );
 
@@ -27,7 +39,7 @@ async function getFamilyData(familyId: string) {
   };
 }
 
-export default async function FamilyPage({ params }: { params: { familyId: string } }) {
+export default async function FamilyPage({ params }: FamilyPageProps) {
   const data = await getFamilyData(params.familyId);
 
   if (!data) {
