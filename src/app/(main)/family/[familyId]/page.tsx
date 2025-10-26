@@ -7,6 +7,12 @@ import { Family, User } from "@/lib/types";
 // Ensure that generateStaticParams returns a valid array of params
 export async function generateStaticParams() {
   const families = await getAllFamilies();
+
+  // If no families, return a dummy ID to prevent build errors
+  if (families.length === 0) {
+    return [{ familyId: 'temp-build-fix' }];
+  }
+
   return families
     .filter((family) => family && family.id)
     .map((family) => ({ familyId: family.id }));
@@ -14,7 +20,8 @@ export async function generateStaticParams() {
 
 // Safeguard getFamilyData against invalid familyId
 async function getFamilyData(familyId: string): Promise<{ family: Family; members: User[] } | null> {
-  if (!familyId) return null;
+  // The dummy ID will cause getFamily to return null, which is handled gracefully.
+  if (!familyId || familyId === 'temp-build-fix') return null;
 
   const family = await getFamily(familyId);
   if (!family) return null;
@@ -36,6 +43,7 @@ export default async function FamilyPage({ params }: { params: { familyId: strin
   const data = await getFamilyData(params.familyId);
 
   if (!data) {
+    // This will be shown for the 'temp-build-fix' page, which is fine.
     return <div>Family not found.</div>;
   }
 
