@@ -16,7 +16,7 @@ import MainLayout from './layouts/MainLayout';
 
 const Router: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route path="/add-transaction" element={<AddTransaction />} />
