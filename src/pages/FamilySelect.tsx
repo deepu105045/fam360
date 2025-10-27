@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,19 +9,19 @@ import { Loader2 } from 'lucide-react';
 
 export default function FamilySelectPage() {
   const { user, families, loading, userDoc } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [selected, setSelected] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/');
+      navigate('/');
     }
-  }, [user, loading, router]);
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (families.length === 0 && !loading) {
-        router.push('/family-create');
+        navigate('/family-create');
     } else if (families.length > 0) {
         const preferredFamily = localStorage.getItem('fam360_selected_family');
         const primaryFamily = userDoc?.primaryFamily;
@@ -33,16 +33,16 @@ export default function FamilySelectPage() {
             setSelected(families[0].id);
         }
     }
-  }, [families, loading, router, userDoc]);
+  }, [families, loading, navigate, userDoc]);
 
   const handleSelect = () => {
     if (!selected) return;
     setBusy(true);
     localStorage.setItem('fam360_selected_family', selected);
-    router.push('/dashboard');
+    navigate('/dashboard');
   };
   
-  const goCreate = () => router.push("/family-create");
+  const goCreate = () => navigate("/family-create");
 
   if (loading || families.length === 0) {
     return <div className="flex h-screen items-center justify-center">Loading families...</div>;
