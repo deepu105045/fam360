@@ -1,8 +1,4 @@
-
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { LayoutDashboard, Wallet, Home, ClipboardList, MessagesSquare, DollarSign, PieChart, Users } from "lucide-react";
@@ -19,16 +15,16 @@ const navItems = [
 ];
 
 export function SidebarNav() {
-  const pathname = usePathname();
+  const location = useLocation();
 
   const renderNavLinks = (isMobile: boolean = false) => (
     <nav className={cn("flex flex-col gap-2", isMobile ? "p-4" : "p-2 pt-4")}>
       {navItems.map((item) => (
         <Link
           key={item.href}
-          href={item.href}
+          to={item.href}
           className={cn(
-            buttonVariants({ variant: pathname === item.href ? "default" : "ghost" }),
+            buttonVariants({ variant: location.pathname === item.href ? "default" : "ghost" }),
             "justify-start"
           )}
         >
