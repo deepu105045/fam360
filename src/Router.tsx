@@ -13,12 +13,16 @@ import Transactions from './pages/Transactions';
 import FamilyPage from './pages/FamilyPage';
 import CreateFamily from './pages/CreateFamily';
 import MainLayout from './layouts/MainLayout';
+import LandingPage from './pages/LandingPage';
+import Index from './pages/Index';
 
 const Router: React.FC = () => {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/" element={<MainLayout />}>
+          <Route path="/" element={<Index />} />
           <Route path="/add-transaction" element={<AddTransaction />} />
           <Route path="/asset-management" element={<AssetManagement />} />
           <Route path="/chat" element={<Chat />} />
