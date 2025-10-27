@@ -11,7 +11,7 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
-  const { user, loading, familyCheckLoading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,7 +22,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }, [user, loading, navigate]);
 
   // Render a loading screen while checking for family association
-  if (loading || (user && familyCheckLoading)) {
+  if (loading || !user) {
     return <div className="flex h-screen items-center justify-center">Authenticating...</div>;
   }
 
