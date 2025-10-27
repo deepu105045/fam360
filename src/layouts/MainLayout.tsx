@@ -3,7 +3,7 @@
 import { SidebarNav } from "@/components/sidebar-nav";
 import { FamilyProvider } from "@/hooks/use-family";
 import { useAuth } from "@/hooks/use-auth";
-import { usePathname, useRouter } from "next/navigation";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 interface MainLayoutProps {
@@ -12,14 +12,14 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const { user, loading, familyCheckLoading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/');
+      navigate('/');
     }
-  }, [user, loading, router]);
+  }, [user, loading, navigate]);
 
   // Render a loading screen while checking for family association
   if (loading || (user && familyCheckLoading)) {
@@ -27,7 +27,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }
 
   // If the user is on the create family page, don't render the main layout
-  if (pathname === '/family-create') {
+  if (location.pathname === '/family-create') {
     return <>{children}</>;
   }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { useFamily } from '@/hooks/use-family';
 import { createFamily } from '@/lib/families';
@@ -13,7 +13,7 @@ import { X, Loader2 } from 'lucide-react';
 export default function FamilyCreatePage() {
   const { user, userDoc } = useAuth();
   const { refreshFamilies } = useFamily();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [familyName, setFamilyName] = useState('');
   const [memberEmail, setMemberEmail] = useState('');
   const [memberEmails, setMemberEmails] = useState<string[]>([]);
@@ -48,7 +48,7 @@ export default function FamilyCreatePage() {
       await createFamily(payload);
       await refreshFamilies();
       setStatusMessage('Family created! Redirecting to dashboard...');
-      router.push('/dashboard');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Failed to create family:', error);
       setStatusMessage('Failed to create family. Please try again.');
