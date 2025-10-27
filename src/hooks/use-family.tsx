@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "./use-auth";
 import { getFamiliesForUser } from "@/lib/families";
 import { Family } from "@/lib/types";
@@ -19,7 +19,7 @@ const FamilyContext = createContext<FamilyContextType | null>(null);
 
 export const FamilyProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [families, setFamilies] = useState<Array<{ id: string; data: Family }>>([]);
   const [currentFamily, setCurrentFamily] = useState<{ id: string; data: Family } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +27,7 @@ export const FamilyProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchFamilies = useCallback(async () => {
     if (!user) {
         setIsLoading(false);
-        if(!authLoading) router.push("/");
+        if(!authLoading) navigate("/");
         return;
     }
     setIsLoading(true);
@@ -42,27 +42,27 @@ export const FamilyProvider = ({ children }: { children: React.ReactNode }) => {
         setCurrentFamily(familyToSelect);
         localStorage.setItem("currentFamilyId", familyToSelect.id);
       } else if (!authLoading) {
-        router.push("/family/create");
+        navigate("/family/create");
       }
     } catch (error) {
       console.error("Error fetching families:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [user, router, authLoading]);
+  }, [user, navigate, authLoading]);
 
   useEffect(() => {
     if (!authLoading) {
         fetchFamilies();
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, fetchFamilies]);
 
   const switchFamily = (familyId: string) => {
     const family = families.find((f) => f.id === familyId);
     if (family) {
       setCurrentFamily(family);
       localStorage.setItem("currentFamilyId", family.id);
-      router.push("/dashboard");
+      navigate("/dashboard");
     }
   };
 

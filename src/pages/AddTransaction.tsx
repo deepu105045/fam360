@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,7 +35,7 @@ import { getQuickCategories, QuickCategories } from "@/lib/config";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function AddTransactionPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const { currentFamily, isLoading: isFamilyLoading } = useFamily();
@@ -116,7 +116,7 @@ export default function AddTransactionPage() {
           title: "Success!",
           description: `Your ${activeTab} has been added.`,
       })
-      router.push('/expense-management');
+      navigate('/expense-management');
     } catch (error) {
       console.error("Error adding transaction: ", error);
       toast({
@@ -225,7 +225,7 @@ export default function AddTransactionPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8">
         <div className="flex items-center mb-8 relative">
-            <Button variant="outline" size="icon" onClick={() => router.back()} className="absolute left-0">
+            <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="absolute left-0">
                 <ArrowLeft className="w-6 h-6" />
             </Button>
             <div className="flex-grow text-center">

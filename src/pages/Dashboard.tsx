@@ -2,8 +2,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '@/hooks/use-auth';
 import { useFamily } from '@/hooks/use-family';
 import {
@@ -62,13 +61,13 @@ const features = [
 export default function DashboardPage() {
   const { user, signOut, loading: authLoading } = useAuth();
   const { families, currentFamily, switchFamily, isLoading: familyLoading } = useFamily();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!authLoading && !familyLoading && user && families.length === 0) {
-      router.push('/family/create');
+      navigate('/family/create');
     }
-  }, [user, families, authLoading, familyLoading, router]);
+  }, [user, families, authLoading, familyLoading, navigate]);
 
   const handleFamilySwitch = (familyId: string) => {
     if (familyId === currentFamily?.id) return;
@@ -106,7 +105,7 @@ export default function DashboardPage() {
                 ))}
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/family/create")}>
+              <DropdownMenuItem onClick={() => navigate("/family/create")}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 <span>Create New Family</span>
               </DropdownMenuItem>
@@ -133,11 +132,11 @@ export default function DashboardPage() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/profile")}>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/family-settings")}>
+              <DropdownMenuItem onClick={() => navigate("/family-settings")}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Family Settings</span>
               </DropdownMenuItem>
@@ -157,7 +156,7 @@ export default function DashboardPage() {
       </div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((feature) => (
-          <Link href={feature.href} key={feature.title}>
+          <Link to={feature.href} key={feature.title}>
             <Card className="h-full transform-gpu transition-all duration-200 ease-in-out hover:-translate-y-1 hover:shadow-xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-lg font-medium font-headline">

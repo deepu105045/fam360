@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -29,7 +29,7 @@ export default function SpendingAnalysisPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { currentFamily } = useFamily();
   const familyId = currentFamily?.id;
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handlePrevMonth = () => {
     setSelectedDate(prevDate => {
@@ -53,7 +53,7 @@ export default function SpendingAnalysisPage() {
       return;
     }
     console.log("Fetching transactions for familyId:", familyId);
-    const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+    const env = import.meta.env.VITE_FIREBASE_ENV || 'dev';
     const transactionsCollection = collection(db, `fam360/${env}/families`, familyId, "transactions");
     const q = query(transactionsCollection);
     const querySnapshot = await getDocs(q);
@@ -125,7 +125,7 @@ export default function SpendingAnalysisPage() {
   return (
     <div className="container mx-auto p-4 relative min-h-[calc(100vh-8rem)]">
         <div className="flex justify-between items-center mb-6 sm:mb-8">
-            <Button variant="outline" size="icon" onClick={() => router.push('/expense-management')}>
+            <Button variant="outline" size="icon" onClick={() => navigate('/expense-management')}>
                 <ArrowLeft className="w-6 h-6" />
             </Button>
             <div className="space-y-1 text-center">

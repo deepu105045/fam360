@@ -2,8 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -52,7 +51,7 @@ export default function ExpenseManagementPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { currentFamily } = useFamily();
   const familyId = currentFamily?.id;
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<TransactionType>('expense');
 
@@ -83,7 +82,7 @@ export default function ExpenseManagementPage() {
       return;
     }
     console.log("Fetching transactions for familyId:", familyId);
-    const env = process.env.NEXT_PUBLIC_FIREBASE_ENV || 'dev';
+    const env = import.meta.env.VITE_FIREBASE_ENV || 'dev';
     const transactionsCollection = collection(db, `fam360/${env}/families`, familyId, "transactions");
     const q = query(transactionsCollection);
     const querySnapshot = await getDocs(q);
@@ -301,7 +300,7 @@ const totalCurrentMonthIncome = useMemo(() => {
   return (
     <div className="container mx-auto p-4 relative min-h-[calc(100vh-8rem)]">
         <div className="flex justify-between items-center mb-6 sm:mb-8">
-            <Button variant="outline" size="icon" onClick={() => router.push('/dashboard')}>
+            <Button variant="outline" size="icon" onClick={() => navigate('/dashboard')}>
                 <ArrowLeft className="w-6 h-6" />
             </Button>
             <div className="space-y-1 text-center">
@@ -317,7 +316,7 @@ const totalCurrentMonthIncome = useMemo(() => {
                 <DropdownMenuItem onClick={() => setIsDrawerOpen(true)}>
                   View Transactions
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/spending-analysis')}>
+                <DropdownMenuItem onClick={() => navigate('/spending-analysis')}>
                   Spending Analysis
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -445,7 +444,7 @@ const totalCurrentMonthIncome = useMemo(() => {
         
         <div className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-50">
             <Button asChild size="lg" className="rounded-full shadow-lg px-6">
-                <Link href="/add-transaction" className="flex items-center gap-2">
+                <Link to="/add-transaction" className="flex items-center gap-2">
                     <Plus className="h-6 w-6" />
                     <span>Add Transaction</span>
                 </Link>
